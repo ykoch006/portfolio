@@ -57,7 +57,7 @@ export default async function HomePage({
         </div>
 
         <div className={styles.id}>
-          <h1>y.koc / notyuk</h1>
+          <h1>y.koc / ykoch006</h1>
           <p>
             personal projects
             {" "}
@@ -95,7 +95,7 @@ export default async function HomePage({
         <div className={styles.links}>
           <div className={styles.nav}>
             <a href="mailto:ykoch006@gmail.com">mail</a>
-            <a href="https://github.com/notyuk" target="_blank" rel="noreferrer">
+            <a href="https://github.com/ykoch006" target="_blank" rel="noreferrer">
               node
             </a>
             <a href="/rss.xml">feed</a>
