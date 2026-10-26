@@ -62,12 +62,13 @@ export default async function HomePage({
             personal projects
             {" "}
             <em>
-            placeholder
+            computer science, university of reading
             </em>
           </p>
         </div>
 
         <div className={styles.leftStack}>
+          {latest.length > 0 && (
           <div className={styles.write}>
             <h2>writing —</h2>
             <ol>
@@ -83,6 +84,7 @@ export default async function HomePage({
               all entries
             </a>
           </div>
+          )}
 
           <Guestbook modkey={modkey} />
         </div>
@@ -98,7 +100,6 @@ export default async function HomePage({
             <a href="https://github.com/ykoch006" target="_blank" rel="noreferrer">
               node
             </a>
-            <a href="/rss.xml">feed</a>
             <a href="#guestbook">book</a>
           </div>
         </div>

@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "homepage",
-  description: "personal project",
+  title: "yukselkoc",
+  description:
+    "yüksel koç: final-year computer science student at the university of reading. software engineering, cloud systems, simulation.",
 };
 
 export default function RootLayout({

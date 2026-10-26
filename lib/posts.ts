@@ -41,17 +41,20 @@ export function getAllPosts(): PostMeta[] {
     .readdirSync(BLOG_DIR)
     .filter((f) => f.endsWith(".md") || f.endsWith(".mdx"));
 
-  const posts = files.map((file) => {
+  const posts = files.flatMap((file) => {
     const slug = file.replace(/\.(md|mdx)$/, "");
     const source = fs.readFileSync(path.join(BLOG_DIR, file), "utf8");
     const { data } = matter(source);
-    return {
-      slug,
-      title: String(data.title ?? slug),
-      date: new Date(data.date).toISOString(),
-      description: data.description ? String(data.description) : undefined,
-      images: parseImages(data.images),
-    };
+    if (data.draft) return [];
+    return [
+      {
+        slug,
+        title: String(data.title ?? slug),
+        date: new Date(data.date).toISOString(),
+        description: data.description ? String(data.description) : undefined,
+        images: parseImages(data.images),
+      },
+    ];
   });
 
   return posts.sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -65,6 +68,7 @@ export async function getPost(slug: string): Promise<Post | null> {
 
   const source = fs.readFileSync(file, "utf8");
   const { data, content } = matter(source);
+  if (data.draft) return null;
   const processed = await remark().use(html).process(content);
 
   return {
