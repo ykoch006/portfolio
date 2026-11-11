@@ -30,6 +30,7 @@
 }
 .h2 {
   margin: 0;
+  color: var(--blue);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 2.5px;
@@ -61,7 +62,7 @@
   display: inline-block;
   width: 1.4ch;
   font-size: 14px;
-  color: var(--ink);
+  color: var(--pink);
   vertical-align: -1px;
 }
 .themeToggle {
@@ -80,9 +81,9 @@
 .brand { margin: 36px 0 22px; }
 .brand h1 {
   margin: 0;
+  font-weight: 700;
   font-size: clamp(26px, 6vw, 40px);
-  font-weight: 500;
-  letter-spacing: -0.5px;
+  letter-spacing: -1px;
   line-height: 1.1;
 }
 .brand h1 span { color: var(--mute-1); font-weight: 400; }
@@ -91,8 +92,8 @@
 .tag {
   display: inline-block;
   max-width: 100%;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--pink);
+  color: #0f0f0f;
   padding: 2px 7px 3px;
   font-size: 11px;
   letter-spacing: 1px;
@@ -109,7 +110,7 @@
   text-decoration: none;
   font-size: 12px;
 }
-.nav a:hover { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.nav a:hover { border-color: var(--blue); background: var(--blue); color: var(--paper); }
 
 /* ─── grid ─── */
 .grid {
@@ -135,7 +136,8 @@
   text-decoration: none;
   border-bottom: 1px solid currentColor;
 }
-.cta:hover { background: var(--ink); color: var(--paper); }
+.cta { color: var(--blue); }
+.cta:hover { background: var(--pink); color: #0f0f0f; }
 
 .mix { margin: 0; }
 .mixScreen {
@@ -164,11 +166,11 @@
   height: 64px;
   margin: -32px 0 0 -32px;
   border-radius: 50%;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--pink);
+  color: #0f0f0f;
   font-size: 22px;
   padding-left: 4px;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: 3px 3px 0 var(--blue);
   transition: transform 150ms ease;
 }
 .mixPlay:hover .mixPlayIcon,
@@ -201,7 +203,7 @@
   text-decoration: none;
 }
 .demosCard strong { font-size: 14px; font-weight: 500; }
-.demosCard:hover { border-color: var(--ink); }
+.demosCard:hover { border-color: var(--pink); box-shadow: 3px 3px 0 var(--pink); }
 
 /* now playing (spotify) */
 .np { min-width: 0; }
@@ -300,6 +302,16 @@
   background: var(--line);
   overflow: hidden;
 }
+.frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--pink) 0.7px, transparent 1.2px);
+  background-size: 4px 4px;
+  mix-blend-mode: multiply;
+  opacity: 0.22;
+  pointer-events: none;
+}
 .frameImg { object-fit: cover; animation: fade 400ms ease; }
 @keyframes fade { from { opacity: 0; } }
 .frameBar {
@@ -339,7 +351,7 @@
   overflow: hidden;
 }
 .sheetThumb img { width: 100%; height: 100%; object-fit: cover; }
-.sheetThumb[aria-current="true"] { border-color: var(--ink); }
+.sheetThumb[aria-current="true"] { border-color: var(--pink); }
 
 /* ─── guestbook ─── */
 .guestbook {
@@ -375,7 +387,7 @@
   text-transform: uppercase;
   cursor: pointer;
 }
-.guestbookForm button:hover { background: var(--ink); color: var(--paper); }
+.guestbookForm button:hover { background: var(--pink); border-color: var(--pink); color: #0f0f0f; }
 .honeypot {
   position: absolute;
   width: 1px;
@@ -411,7 +423,7 @@
 /* ─── footer ─── */
 .foot {
   padding: 24px 0 40px;
-  border-top: 1px solid var(--ink);
+  border-top: 1px solid var(--blue);
 }
 .contact {
   display: flex;

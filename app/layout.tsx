@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Space_Mono } from "next/font/google";
 import "./globals.css";
 
-const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
+const mono = Space_Mono({ variable: "--font-mono", subsets: ["latin"], weight: ["400", "700"] });
 
 export const metadata: Metadata = {
   title: "y.koc — notyuk",
