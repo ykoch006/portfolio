@@ -12,7 +12,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { getAllPhotos } from "@/lib/posts";
 import { countDemos } from "@/lib/demos";
 import { getWeather } from "@/lib/weather";
-import { contact, projects, youtube } from "@/lib/site";
+import { contact, youtube } from "@/lib/site";
 import styles from "./page.module.css";
 
 function stamp() {
@@ -58,7 +58,6 @@ export default async function HomePage({
           <nav className={styles.nav} aria-label="sections">
             <a href="#music">music</a>
             <a href="#photos">photos</a>
-            <a href="#projects">projects</a>
             <a href="/demos">demos</a>
             <a href="#guestbook">guestbook</a>
             <a href="#contact">contact</a>
@@ -90,20 +89,6 @@ export default async function HomePage({
               <span className={styles.mute}>photographs</span>
             </div>
             <Frames photos={photos} />
-          </section>
-
-          <section id="projects" className={styles.projects} aria-labelledby="projects-h">
-            <h2 id="projects-h" className={styles.h2}>projects</h2>
-            <ul className={styles.list}>
-              {projects.map((p) => (
-                <li key={p.href}>
-                  <a href={p.href} {...(p.external ? { target: "_blank", rel: "noreferrer" } : {})}>
-                    {p.name}
-                  </a>
-                  <span className={styles.mute}>{p.note}</span>
-                </li>
-              ))}
-            </ul>
           </section>
 
           <Guestbook modkey={modkey} />
