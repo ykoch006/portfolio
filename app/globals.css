@@ -4,7 +4,7 @@
   --mute-1: #5a544b;
   --mute-2: #6c655b;
   --line: #b9b1a2;
-  --pink: #ff4f9a;
+  --accent: #ff6c2f;
   --blue: #005f98;
   --font: var(--font-mono), "SF Mono", Consolas, Menlo, monospace;
   color-scheme: light;
@@ -15,7 +15,7 @@ html[data-theme="dark"] {
   --mute-1: #b3a99a;
   --mute-2: #9d9282;
   --line: #3d3830;
-  --pink: #ff5ca3;
+  --accent: #ff7a3d;
   --blue: #5fb4ea;
   color-scheme: dark;
 }
