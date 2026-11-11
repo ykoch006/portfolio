@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllPosts, getPost, fullDate } from "@/lib/posts";
 import styles from "../blog.module.css";
@@ -33,7 +34,7 @@ export default async function PostPage({
     <div className={styles.root}>
       <div className={styles.page}>
         <div className={styles.head}>
-          <a href="/blog" className={styles.home}>← writing</a>
+          <Link href="/blog" className={styles.home}>← writing</Link>
           <span className={styles.label}>{fullDate(post.date)}</span>
         </div>
 
@@ -44,8 +45,8 @@ export default async function PostPage({
         </article>
 
         <div className={styles.postNav}>
-          <a href="/blog">← all entries</a>
-          <a href="/">index →</a>
+          <Link href="/blog">← all entries</Link>
+          <Link href="/">index →</Link>
         </div>
       </div>
     </div>

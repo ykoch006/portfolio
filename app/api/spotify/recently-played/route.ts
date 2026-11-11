@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 import { NextResponse } from "next/server";
 import { getSpotifyAccessToken } from "@/lib/spotify";
@@ -34,8 +33,8 @@ export async function GET() {
       albums.push({
         id: album.id,
         name: album.name,
-        artist: item.track.artists.map((a) => a.name).join(", "),
-        imageUrl: album.images?.[1]?.url ?? album.images?.[0]?.url ?? "",
+        artist: item.track.artists.map((a: { name: string }) => a.name).join(", "),
+        imageUrl: album.images?.[2]?.url ?? album.images?.[0]?.url ?? "",
       });
       if (albums.length >= 7) break;
     }

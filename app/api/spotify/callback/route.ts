@@ -1,4 +1,3 @@
-// @ts-nocheck
 // One-off helper route for (re)authorizing the Spotify app with new scopes.
 // Visit the authorize URL, Spotify redirects here with ?code=..., and this
 // exchanges it for a refresh token to copy into SPOTIFY_REFRESH_TOKEN.

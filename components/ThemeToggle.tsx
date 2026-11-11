@@ -1,35 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 export default function ThemeToggle({ className }: { className?: string }) {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-
-  useEffect(() => {
-    const current = document.documentElement.getAttribute("data-theme");
-    setTheme(current === "dark" ? "dark" : "light");
-  }, []);
-
   const toggle = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
     try {
       localStorage.setItem("theme", next);
-    } catch {
-      // ignore (private browsing, storage disabled, etc.)
-    }
+    } catch {}
   };
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      className={className}
-      aria-label="toggle dark mode"
-      suppressHydrationWarning
-    >
-      {theme === "dark" ? "☀" : "☾"}
+    <button type="button" onClick={toggle} className={className} aria-label="toggle dark mode">
+      <span className="if-dark" aria-hidden="true">☀</span>
+      <span className="if-light" aria-hidden="true">☾</span>
     </button>
   );
 }

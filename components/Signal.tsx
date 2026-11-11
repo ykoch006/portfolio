@@ -20,75 +20,66 @@ type Track = {
 
 export default function Signal() {
   const [track, setTrack] = useState<Track | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-
-    const fetchNowPlaying = async () => {
+    const load = async () => {
       try {
         const res = await fetch("/api/spotify/now-playing");
         const data = await res.json();
         if (!cancelled) setTrack(data);
       } catch {
         if (!cancelled) setTrack({ isPlaying: false });
-      } finally {
-        if (!cancelled) setLoading(false);
       }
     };
-
-    fetchNowPlaying();
-    const interval = setInterval(fetchNowPlaying, 20000);
-
+    load();
+    const t = setInterval(load, 20000);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      clearInterval(t);
     };
   }, []);
 
-  const playing = !loading && track?.isPlaying && track.title;
+  const t = track?.isPlaying && track.title ? track : null;
 
   return (
-    <div className={styles.mnSig}>
-      <h2>now playing</h2>
-      <div className={styles.mnSigArt}>
-        {playing && track!.albumImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={track!.albumImageUrl}
-            alt={track!.album ?? "album cover"}
-            className={styles.mnSigImg}
-          />
-        ) : null}
+    <div className={styles.np}>
+      <p className={styles.label}>
+        on spotify {t && <AsciiEqualizer className={styles.eq} />}
+      </p>
+      <div className={styles.npRow}>
+        <div className={styles.npArt}>
+          {t?.albumImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={t.albumImageUrl} alt={t.album ?? ""} width={56} height={56} />
+          )}
+        </div>
+        <div className={styles.npText}>
+          {!track ? (
+            <p className={styles.mute}>listening…</p>
+          ) : t ? (
+            <>
+              <p className={styles.npTitle}>
+                {t.songUrl ? (
+                  <a href={t.songUrl} target="_blank" rel="noreferrer">{t.title}</a>
+                ) : (
+                  t.title
+                )}
+              </p>
+              <p className={styles.mute}>{t.artist}</p>
+              <ListenAlong
+                title={t.title!}
+                artist={t.artist!}
+                progressMs={t.progressMs ?? 0}
+                durationMs={t.durationMs ?? 0}
+                fetchedAt={t.fetchedAt ?? 0}
+              />
+            </>
+          ) : (
+            <p className={styles.mute}>quiet right now</p>
+          )}
+        </div>
       </div>
-      {loading ? (
-        <p className={styles.m}>listening</p>
-      ) : playing ? (
-        <>
-          <p>
-            {track!.songUrl ? (
-              <a href={track!.songUrl} target="_blank" rel="noreferrer">
-                {track!.title}
-              </a>
-            ) : (
-              track!.title
-            )}
-          </p>
-          <p className={styles.a}>{track!.artist}</p>
-          <p className={styles.m}>
-            via spotify <AsciiEqualizer className={styles.eq} />
-          </p>
-          <ListenAlong
-            title={track!.title!}
-            artist={track!.artist!}
-            progressMs={track!.progressMs ?? 0}
-            durationMs={track!.durationMs ?? 0}
-            fetchedAt={track!.fetchedAt ?? Date.now()}
-          />
-        </>
-      ) : (
-        <p className={styles.m}>quiet</p>
-      )}
       <RecentSpins />
     </div>
   );

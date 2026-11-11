@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { prefersReducedMotion } from "@/lib/motion";
 
 const LEVELS = "▁▂▃▄▅▆▇";
 const BARS = 5;
@@ -14,6 +15,7 @@ export default function AsciiEqualizer({ className }: { className?: string }) {
   const [frame, setFrame] = useState(() => Array(BARS).fill(0));
 
   useEffect(() => {
+    if (prefersReducedMotion()) return;
     const interval = setInterval(() => setFrame(randomFrame()), 180);
     return () => clearInterval(interval);
   }, []);

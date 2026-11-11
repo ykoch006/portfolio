@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAllPosts, pad, fullDate } from "@/lib/posts";
 import styles from "./blog.module.css";
 
@@ -14,7 +15,7 @@ export default function BlogIndex() {
     <div className={styles.root}>
       <div className={styles.page}>
         <div className={styles.head}>
-          <a href="/" className={styles.home}>← index</a>
+          <Link href="/" className={styles.home}>← index</Link>
           <h1>writing / {pad(total)} entries</h1>
         </div>
 

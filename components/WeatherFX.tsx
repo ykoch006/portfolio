@@ -1,8 +1,5 @@
-"use client";
+import type { Weather } from "@/lib/weather";
 
-import { useEffect, useState } from "react";
-
-type Weather = { tempC: number; condition: string } | null;
 type Category = "sun" | "clouds" | "fog" | "rain" | "snow" | "storm";
 type Intensity = "light" | "normal" | "heavy";
 
@@ -23,35 +20,8 @@ function intensityOf(condition: string): Intensity {
   return "normal";
 }
 
-export default function WeatherFX({ className }: { className?: string }) {
-  const [weather, setWeather] = useState<Weather>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchWeather = async () => {
-      try {
-        const res = await fetch("/api/weather");
-        if (!res.ok) throw new Error(`Weather request failed: ${res.status}`);
-        const data = await res.json();
-        if (!cancelled) setWeather(data);
-      } catch {
-        if (!cancelled) setWeather(null);
-      }
-    };
-
-    fetchWeather();
-    const interval = setInterval(fetchWeather, 10 * 60 * 1000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, []);
-
-  if (!weather) {
-    return null;
-  }
+export default function WeatherFX({ weather, className }: { weather: Weather | null; className?: string }) {
+  if (!weather) return null;
 
   const category = classify(weather.condition);
   const intensity = intensityOf(weather.condition);

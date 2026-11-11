@@ -6,7 +6,10 @@ export default function Mascot() {
     <img
       src="/mascot.gif"
       alt=""
-      aria-hidden="true"
+      width={90}
+      height={76}
+      loading="lazy"
+      decoding="async"
       className={styles.mascot}
     />
   );

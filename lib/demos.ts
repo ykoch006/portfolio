@@ -48,6 +48,12 @@ function dateAddedFor(filePath: string): Date {
   return fs.statSync(filePath).mtime;
 }
 
+const AUDIO = /\.(mp3|wav|m4a|ogg)$/i;
+
+export function countDemos(): number {
+  return fs.existsSync(DEMOS_DIR) ? fs.readdirSync(DEMOS_DIR).filter((f) => AUDIO.test(f)).length : 0;
+}
+
 /**
  * Lists any mp3 (or wav/m4a/ogg) file dropped into public/demos/.
  * Filename becomes the title: "01-late-night-idea.mp3" -> "late night idea".
@@ -57,7 +63,7 @@ export async function getAllDemos(): Promise<Demo[]> {
 
   const files = fs
     .readdirSync(DEMOS_DIR)
-    .filter((f) => /\.(mp3|wav|m4a|ogg)$/i.test(f))
+    .filter((f) => AUDIO.test(f))
     .sort();
 
   const overrides = await getTitleOverrides();

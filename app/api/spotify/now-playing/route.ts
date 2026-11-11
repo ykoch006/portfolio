@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 import { NextResponse } from "next/server";
 import { getSpotifyAccessToken } from "@/lib/spotify";
@@ -37,7 +36,7 @@ export async function GET() {
       title: data.item.name,
       artist: data.item.artists.map((a: { name: string }) => a.name).join(", "),
       album: data.item.album.name,
-      albumImageUrl: data.item.album.images?.[0]?.url ?? "",
+      albumImageUrl: data.item.album.images?.[1]?.url ?? data.item.album.images?.[0]?.url ?? "",
       songUrl: data.item.external_urls?.spotify ?? "",
       progressMs: data.progress_ms ?? 0,
       durationMs: data.item.duration_ms ?? 0,

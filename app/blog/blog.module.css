@@ -1,15 +1,5 @@
 .root {
-  --paper: #ece7d9;
-  --ink: #0f0f0f;
-  --mute-1: #6a635a;
-  --mute-2: #8a8378;
-
   min-height: 100vh;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-geist-mono), 'SF Mono', Consolas, Menlo, monospace;
-  font-size: 12px;
-  line-height: 1.55;
 }
 .root a {
   color: var(--ink);

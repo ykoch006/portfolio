@@ -1,6 +1,8 @@
 import { redis } from "./redis";
 
-const GUESTBOOK_KEY = "guestbook:entries";
+// preview deployments share the production redis, so they write to their own list
+const GUESTBOOK_KEY = process.env.VERCEL_ENV === "preview" ? "guestbook:preview:entries" : "guestbook:entries";
+const SHOWN = 50;
 const MAX_ENTRIES = 500;
 
 export type GuestbookEntry = {
@@ -12,7 +14,7 @@ export type GuestbookEntry = {
 
 export async function getGuestbookEntries(): Promise<GuestbookEntry[]> {
   if (!redis) return [];
-  return redis.lrange<GuestbookEntry>(GUESTBOOK_KEY, 0, MAX_ENTRIES - 1);
+  return redis.lrange<GuestbookEntry>(GUESTBOOK_KEY, 0, SHOWN - 1);
 }
 
 export async function addGuestbookEntry(name: string, comment: string): Promise<void> {

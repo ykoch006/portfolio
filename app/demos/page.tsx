@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAllDemos } from "@/lib/demos";
 import { pad } from "@/lib/posts";
 import DemoList from "@/components/DemoList";
@@ -27,7 +28,7 @@ export default async function DemosIndex({
     <div className={styles.root}>
       <div className={styles.page}>
         <div className={styles.head}>
-          <a href="/" className={styles.home}>← index</a>
+          <Link href="/" className={styles.home}>← index</Link>
           <h1>demos / {pad(total)} tracks</h1>
         </div>
 

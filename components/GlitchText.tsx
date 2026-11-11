@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { prefersReducedMotion } from "@/lib/motion";
 
 const GLITCH_CHARS =
   "アカサタナハマヤラワンイキシチニヒミリエケセテネヘメレオコソトノホモヨロヲ";
@@ -15,6 +16,7 @@ export default function GlitchText({
   const [display, setDisplay] = useState(text);
 
   useEffect(() => {
+    if (prefersReducedMotion()) return;
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout>;
 

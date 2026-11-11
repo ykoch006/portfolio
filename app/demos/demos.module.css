@@ -1,16 +1,5 @@
 .root {
-  --paper: #ece7d9;
-  --ink: #0f0f0f;
-  --mute-1: #6a635a;
-  --mute-2: #8a8378;
-
   min-height: 100vh;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-geist-mono), 'SF Mono', Consolas, Menlo, monospace;
-  font-size: 12px;
-  line-height: 1.55;
-  transition: background-color 200ms ease, color 200ms ease;
 }
 .root a {
   color: var(--ink);
@@ -23,12 +12,6 @@
   border-bottom-color: var(--ink);
 }
 
-:global(html[data-theme="dark"]) .root {
-  --paper: #16140f;
-  --ink: #ece7d9;
-  --mute-1: #b3a99a;
-  --mute-2: #8f8574;
-}
 
 .page {
   max-width: 640px;

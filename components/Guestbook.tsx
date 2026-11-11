@@ -16,8 +16,9 @@ export default async function Guestbook({ modkey }: { modkey?: string }) {
   );
 
   return (
-    <div id="guestbook" className={styles.guestbook}>
-      <h2>guestbook —</h2>
+    <section id="guestbook" className={styles.guestbook} aria-labelledby="gb-h">
+      <h2 id="gb-h" className={styles.h2}>guestbook</h2>
+      <p className={styles.mute}>leave a note. be nice.</p>
 
       {redis ? (
         <form action={submitGuestbookEntry} className={styles.guestbookForm}>
@@ -29,10 +30,10 @@ export default async function Guestbook({ modkey }: { modkey?: string }) {
             className={styles.honeypot}
             aria-hidden="true"
           />
-          <input type="text" name="name" placeholder="name" required maxLength={60} />
+          <input type="text" name="name" placeholder="name" aria-label="name" required maxLength={60} />
           <textarea
             name="comment"
-            placeholder="say something"
+            placeholder="say something" aria-label="message"
             required
             maxLength={500}
             rows={2}
@@ -64,6 +65,6 @@ export default async function Guestbook({ modkey }: { modkey?: string }) {
           </li>
         ))}
       </ol>
-    </div>
+    </section>
   );
 }
