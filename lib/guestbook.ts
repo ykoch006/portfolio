@@ -17,7 +17,7 @@ export async function getGuestbookEntries(): Promise<GuestbookEntry[]> {
   return redis.lrange<GuestbookEntry>(GUESTBOOK_KEY, 0, SHOWN - 1);
 }
 
-export async function addGuestbookEntry(name: string, comment: string): Promise<void> {
+export async function addGuestbookEntry(name: string, comment: string): Promise<GuestbookEntry> {
   if (!redis) throw new Error("Guestbook storage is not configured.");
 
   const entry: GuestbookEntry = {
@@ -29,6 +29,7 @@ export async function addGuestbookEntry(name: string, comment: string): Promise<
 
   await redis.lpush(GUESTBOOK_KEY, entry);
   await redis.ltrim(GUESTBOOK_KEY, 0, MAX_ENTRIES - 1);
+  return entry;
 }
 
 export async function deleteGuestbookEntry(id: string): Promise<void> {

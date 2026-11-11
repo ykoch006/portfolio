@@ -1,4 +1,6 @@
-export type Weather = { tempC: number; condition: string };
+export type Weather = { tempC: number; condition: string; isDay: boolean };
+
+export const WEATHER_PLACE = { name: "London", timeZone: "Europe/London" };
 
 const LONDON = "latitude=51.5074&longitude=-0.1278";
 
@@ -36,7 +38,7 @@ const WEATHER_TEXT: Record<number, string> = {
 export async function getWeather(): Promise<Weather | null> {
   try {
     const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?${LONDON}&current=temperature_2m,weather_code&timezone=Europe%2FLondon`,
+      `https://api.open-meteo.com/v1/forecast?${LONDON}&current=temperature_2m,weather_code,is_day&timezone=Europe%2FLondon`,
       { next: { revalidate: 600 } }
     );
     if (!res.ok) return null;
@@ -44,6 +46,7 @@ export async function getWeather(): Promise<Weather | null> {
     return {
       tempC: Math.round(data.current.temperature_2m),
       condition: WEATHER_TEXT[data.current.weather_code] ?? "unsettled",
+      isDay: data.current.is_day === 1,
     };
   } catch {
     return null;

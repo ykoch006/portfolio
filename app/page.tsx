@@ -61,6 +61,7 @@ export default async function HomePage({
             <a href="/demos">demos</a>
             <a href="#guestbook">guestbook</a>
             <a href="#contact">contact</a>
+            <a href="/hideout">hideout</a>
           </nav>
         </header>
 
