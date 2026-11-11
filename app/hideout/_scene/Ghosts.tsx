@@ -7,7 +7,7 @@ import { getMaterials } from "./materials";
 import { ghostMaterial, tickGhostMaterials } from "./shaders";
 import { glowTexture, sigilTexture } from "./textures";
 import Hotspot from "./Hotspot";
-import { Armchair, RoundTable, Sofa, Bottles } from "./Furniture";
+import { Armchair, RoundTable, Sofa, Bottles, FloorLamp } from "./Furniture";
 import { EMPTY_SEAT, GHOST_SEATS, SPOTS, seatYaw, type Vec3 } from "../_data/layout";
 import { HUE_COLORS, type GhostLook } from "../_data/looks";
 import { MAX_GHOSTS_IN_ROOM, useHideout } from "../_components/context";
@@ -47,6 +47,32 @@ const torsoGeo = new THREE.LatheGeometry(
   ].map(([r, y]) => new THREE.Vector2(r, y)),
   22
 );
+
+const skirtGeo = (() => {
+  const g = new THREE.LatheGeometry(
+    [
+      [0.0, 0.66],
+      [0.2, 0.64],
+      [0.23, 0.5],
+      [0.26, 0.3],
+      [0.3, 0.1],
+      [0.31, 0.04],
+    ].map(([r, y]) => new THREE.Vector2(r, y)),
+    26
+  );
+  const p = g.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i);
+    if (y < 0.5) {
+      const a = Math.atan2(p.getZ(i), p.getX(i));
+      const k = (0.5 - y) / 0.5;
+      p.setX(i, p.getX(i) * (1 + Math.sin(a * 6) * 0.08 * k));
+      p.setZ(i, p.getZ(i) * (1 + Math.cos(a * 5) * 0.08 * k));
+    }
+  }
+  g.computeVertexNormals();
+  return g;
+})();
 
 const sheetGeo = (() => {
   const g = new THREE.LatheGeometry(
@@ -102,10 +128,10 @@ function GhostFigure({ look, material, seed }: { look: GhostLook; material: THRE
       ) : (
         <mesh geometry={torsoGeo} material={material} position={[0, 0, -0.08]} />
       )}
-      <Limb from={[-0.13, 0.6, -0.02]} to={[-0.14, 0.6, 0.38]} r={0.1} material={material} />
-      <Limb from={[0.13, 0.6, -0.02]} to={[0.14, 0.6, 0.38]} r={0.1} material={material} />
-      <Limb from={[-0.14, 0.58, 0.42]} to={[-0.15, 0.12, 0.46]} r={0.08} material={material} />
-      <Limb from={[0.14, 0.58, 0.42]} to={[0.15, 0.12, 0.46]} r={0.08} material={material} />
+      <mesh position={[0, 0.6, 0.17]} rotation={[Math.PI / 2, 0, 0]} scale={[1.85, 1, 1]} material={material}>
+        <capsuleGeometry args={[0.125, 0.36, 6, 14]} />
+      </mesh>
+      <mesh geometry={skirtGeo} position={[0, 0, 0.4]} scale={[1.25, 1, 0.85]} material={material} />
       {look.shape === "scholar" ? (
         <>
           <Limb from={[-0.26, 1.08, -0.06]} to={[-0.3, 0.8, 0.12]} r={0.06} material={material} />
@@ -235,6 +261,7 @@ function SeatedGhost({ ghost, index }: { ghost: GhostEntry; index: number }) {
       target={{ kind: "ghost", index }}
       label={name}
       tone="small"
+      alwaysShowLabel={false}
       labelPosition={[seat.position[0], 2.0, seat.position[2]]}
     >
       <group position={seat.position} rotation={[0, seatYaw(seat), 0]}>
@@ -250,6 +277,7 @@ function SeatedGhost({ ghost, index }: { ghost: GhostEntry; index: number }) {
 
 function GuestbookDesk() {
   const m = getMaterials();
+  const { hovered } = useHideout();
   const [x, , z] = SPOTS.lectern;
   return (
     <Hotspot id="guestbook" target={{ kind: "feature", id: "guestbook" }} label="Guestbook" labelPosition={[x, 1.75, z]}>
@@ -289,7 +317,13 @@ function GuestbookDesk() {
         </mesh>
       </group>
       <Armchair position={EMPTY_SEAT.position} yaw={seatYaw(EMPTY_SEAT)} material={getMaterials().velvetGreen} />
-      <pointLight position={[LECTERN_CANDLE[0], LECTERN_CANDLE[1] + 0.35, LECTERN_CANDLE[2]]} color="#ffb070" intensity={2.5} distance={3.5} decay={2} />
+      <pointLight
+        position={[LECTERN_CANDLE[0], LECTERN_CANDLE[1] + 0.35, LECTERN_CANDLE[2]]}
+        color="#ffb070"
+        intensity={hovered === "guestbook" ? 4.5 : 2.5}
+        distance={3.5}
+        decay={2}
+      />
       <mesh position={[EMPTY_SEAT.position[0], 0.014, EMPTY_SEAT.position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[1.6, 1.6]} />
         <meshBasicMaterial map={sigilTexture()} color="#7affd0" transparent opacity={0.3} blending={THREE.AdditiveBlending} depthWrite={false} />
@@ -309,18 +343,22 @@ export default function Ghosts() {
 
   return (
     <group>
-      {GHOST_SEATS.map((seat, i) => (
-        <Armchair key={i} position={seat.position} yaw={seatYaw(seat)} material={m[CHAIR_MATS[i % CHAIR_MATS.length]]} />
-      ))}
+      {GHOST_SEATS.map((seat, i) =>
+        seat.kind === "sofa" ? null : (
+          <Armchair key={i} position={seat.position} yaw={seatYaw(seat)} material={m[CHAIR_MATS[i % CHAIR_MATS.length]]} />
+        )
+      )}
+      <Sofa position={SPOTS.sofa} yaw={Math.PI / 2} material={m.leather} />
       {shown.map((g, i) => (
         <SeatedGhost key={g.id} ghost={g} index={i} />
       ))}
       <RoundTable position={SPOTS.loungeTable} radius={0.5} height={0.55} />
       <Bottles position={[SPOTS.loungeTable[0] - 0.1, 0.57, SPOTS.loungeTable[2] + 0.05]} count={3} seed={2} />
-      <RoundTable position={[3.9, 0, -0.4]} radius={0.3} height={0.6} />
-      <Bottles position={[3.9, 0.62, -0.4]} count={2} seed={5} />
-      <RoundTable position={[-3.2, 0, -5.6]} radius={0.3} height={0.6} />
-      <Sofa position={[-4.6, 0, 5.3]} yaw={Math.PI * 0.85} />
+      <RoundTable position={[4.55, 0, 0.2]} radius={0.3} height={0.6} />
+      <Bottles position={[4.62, 0.62, 0.15]} count={2} seed={5} />
+      <RoundTable position={[-4.6, 0, -5.9]} radius={0.3} height={0.6} />
+      <FloorLamp position={[4.55, 0, -3.3]} />
+      <FloorLamp position={[-6.3, 0, 3.2]} />
       <GuestbookDesk />
     </group>
   );

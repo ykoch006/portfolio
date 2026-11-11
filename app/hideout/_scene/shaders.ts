@@ -19,9 +19,6 @@ export function ghostMaterial(key: string, color: string) {
   if (hit) return hit;
   const mat = new THREE.ShaderMaterial({
     transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
     uniforms: {
       uColor: { value: new THREE.Color(color) },
       uTime: { value: 0 },
@@ -42,12 +39,12 @@ export function ghostMaterial(key: string, color: string) {
       ${NOISE}
       void main(){
         float f = 1.0-abs(dot(normalize(vN),normalize(vV)));
-        float rim = pow(f,2.2);
-        float wisps = fbm(vW.xy*2.5+vec2(0.0,-uTime*0.35));
-        float a = 0.10 + rim*0.85 + wisps*0.12;
-        a *= 0.55 + uBoost*0.6;
-        a *= smoothstep(0.12, 0.6, vW.y);
-        gl_FragColor = vec4(uColor*(0.7+rim*0.9+uBoost*0.5), a);
+        float rim = pow(f,2.0);
+        float wisps = fbm(vW.xy*2.2+vec2(0.0,-uTime*0.3));
+        vec3 col = uColor*(0.32 + rim*2.1 + wisps*0.3 + uBoost*0.9);
+        float a = (0.16 + rim*0.72 + wisps*0.1)*(0.8+uBoost*0.2);
+        a *= smoothstep(0.1, 0.62, vW.y);
+        gl_FragColor = vec4(col, a);
       }`,
   });
   ghostCache.set(key, mat);
@@ -79,7 +76,7 @@ export function flameMaterial(color: THREE.ColorRepresentation, seed: number) {
         body *= smoothstep(0.0, 0.08, uv.y);
         vec3 hot = vec3(1.0,0.92,0.6);
         vec3 col = mix(uColor, hot, smoothstep(0.35,0.95,body)*(1.0-uv.y));
-        gl_FragColor = vec4(col*body*1.6, body);
+        gl_FragColor = vec4(col*body*1.15, body);
       }`,
   });
 }
@@ -109,7 +106,7 @@ export function orbMaterial() {
         vec3 bright = vec3(0.55,1.0,0.8);
         vec3 col = mix(deep, bright, smoothstep(0.45,1.1,swirl));
         col += vec3(0.4,1.0,0.8)*pow(f,2.5)*(1.2+uBoost);
-        col *= 1.0 + uPulse*0.5 + uBoost*0.4;
+        col *= 1.0 + uPulse*0.4 + uBoost*0.35;
         gl_FragColor = vec4(col, 0.82+f*0.18);
       }`,
   });
@@ -130,22 +127,44 @@ export function skyMaterial() {
       ${NOISE}
       void main(){
         float y = vUv.y;
-        vec3 nightTop = vec3(0.03,0.04,0.09), nightHorizon = vec3(0.32,0.16,0.12);
-        vec3 dayTop = vec3(0.28,0.38,0.46), dayHorizon = vec3(0.62,0.62,0.58);
-        vec3 top = mix(nightTop, dayTop, uDay), hor = mix(nightHorizon, dayHorizon, uDay);
-        vec3 col = mix(hor, top, smoothstep(0.0,0.75,y));
+        vec3 nightTop = vec3(0.018,0.022,0.055), nightMid = vec3(0.07,0.05,0.12), nightHorizon = vec3(0.3,0.14,0.11);
+        vec3 dayTop = vec3(0.28,0.38,0.46), dayMid = vec3(0.45,0.5,0.55), dayHorizon = vec3(0.66,0.64,0.58);
+        vec3 top = mix(nightTop, dayTop, uDay), mid = mix(nightMid, dayMid, uDay), hor = mix(nightHorizon, dayHorizon, uDay);
+        vec3 col = mix(hor, mid, smoothstep(0.0,0.38,y));
+        col = mix(col, top, smoothstep(0.38,0.85,y));
         float stars = step(0.997, hash(floor(vUv*vec2(900.0,400.0)))) * (1.0-uDay) * smoothstep(0.35,0.8,y) * (1.0-uCloud);
         col += stars*0.8;
         float c = fbm(vec2(vUv.x*5.0+uTime*0.01, vUv.y*3.0));
         float cover = smoothstep(1.0-uCloud, 1.05-uCloud*0.4, c+0.15);
-        vec3 cloudCol = mix(vec3(0.09,0.09,0.13), vec3(0.62,0.64,0.66), uDay);
-        cloudCol += vec3(0.25,0.12,0.05)*(1.0-uDay)*(1.0-y);
+        vec3 cloudCol = mix(vec3(0.035,0.035,0.06), vec3(0.62,0.64,0.66), uDay);
+        cloudCol += vec3(0.16,0.07,0.04)*(1.0-uDay)*pow(1.0-y, 2.0);
         col = mix(col, cloudCol, cover*0.9);
         float beam = exp(-pow((vUv.x-0.5)*28.0,2.0)) * smoothstep(0.25,0.95,y) * 0.35;
         float halo = exp(-length((vUv-vec2(0.5,0.72))*vec2(5.0,9.0))*1.2)*0.4;
         col += vec3(0.25,1.0,0.7)*(beam+halo)*(1.0-uDay*0.6);
         col += vec3(0.7,0.8,1.0)*uFlash;
         gl_FragColor = vec4(col,1.0);
+      }`,
+  });
+}
+
+export function shaftMaterial(color: THREE.ColorRepresentation) {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    uniforms: { uColor: { value: new THREE.Color(color) }, uIntensity: { value: 0.05 }, uTime: { value: 0 } },
+    vertexShader: /* glsl */ `varying vec2 vUv; varying vec3 vW; void main(){ vUv=uv; vW=(modelMatrix*vec4(position,1.0)).xyz; gl_Position=projectionMatrix*viewMatrix*vec4(vW,1.0); }`,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uColor; uniform float uIntensity; uniform float uTime; varying vec2 vUv; varying vec3 vW;
+      ${NOISE}
+      void main(){
+        float along = pow(vUv.y, 1.6) * smoothstep(1.0, 0.7, vUv.y);
+        float edge = smoothstep(0.0, 0.3, vUv.x) * smoothstep(1.0, 0.7, vUv.x);
+        float motes = 0.75 + 0.25*fbm(vec2(vUv.x*4.0, vUv.y*10.0 - uTime*0.04));
+        float floorFade = smoothstep(0.0, 0.8, vW.y);
+        gl_FragColor = vec4(uColor * along * edge * motes * floorFade * uIntensity, 1.0);
       }`,
   });
 }
@@ -171,8 +190,8 @@ export function glassMaterial() {
         float wet = (streak*0.7 + drops*0.6) * uRain;
         float condensation = fbm(vW.xy*1.6)*uFog*0.35;
         vec3 tint = mix(vec3(0.35,0.75,0.7), vec3(0.85,0.9,0.95), uDay);
-        float a = 0.05 + wet*0.45 + condensation + uBoost*0.08;
-        gl_FragColor = vec4(tint*(0.6+wet+uBoost*0.6), a);
+        float a = 0.025 + wet*0.22 + condensation*0.6 + uBoost*0.06;
+        gl_FragColor = vec4(tint*(0.45+wet*0.6+uBoost*0.6), a);
       }`,
   });
 }

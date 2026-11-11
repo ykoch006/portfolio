@@ -95,6 +95,7 @@ export default function HideoutApp({ initialGhosts, weather, place, demos, guest
   const webgl = detected ? detected.webgl : null;
   const quality: Quality = detected?.quality ?? "high";
   const [stage, setStage] = useState<"engine" | "room" | "ready">("engine");
+  const [loaderGone, setLoaderGone] = useState(false);
   const crackle = useRef<Crackle | null>(null);
   const opener = useRef<HTMLElement | null>(null);
 
@@ -219,15 +220,21 @@ export default function HideoutApp({ initialGhosts, weather, place, demos, guest
         <h1 className={styles.srOnly}>The hideout</h1>
         {webgl && (
           <div className={styles.canvas}>
-            <Scene onMount={() => setStage((s) => (s === "engine" ? "room" : s))} onReady={() => setStage("ready")} />
+            <Scene
+              onMount={() => setStage((s) => (s === "engine" ? "room" : s))}
+              onReady={() => {
+                setStage("ready");
+                window.setTimeout(() => setLoaderGone(true), 700);
+              }}
+            />
           </div>
         )}
         {webgl && stage === "ready" && (
           <LabelLayer labels={Object.values(labels)} hovered={hovered} focus={focus} />
         )}
 
-        {webgl !== false && stage !== "ready" && (
-          <div className={styles.loader} role="status" aria-live="polite">
+        {webgl !== false && !loaderGone && (
+          <div className={`${styles.loader} ${stage === "ready" ? styles.loaderOut : ""}`} role="status" aria-live="polite">
             <p className={styles.loaderTitle}>Entering the hideout</p>
             <ol className={styles.stages}>
               <li data-done={stage !== "engine"}>Loading the engine</li>

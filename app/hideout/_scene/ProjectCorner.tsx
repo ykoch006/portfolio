@@ -4,7 +4,8 @@ import * as THREE from "three";
 import { useMemo, useRef, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 import { getMaterials } from "./materials";
-import { glowTexture, textCanvasTexture } from "./textures";
+import { clippingsTexture, glowTexture, rugTexture, textCanvasTexture } from "./textures";
+import { InstancedBoxes, type BoxItem } from "./Instanced";
 import Hotspot from "./Hotspot";
 import { Armchair, Sofa } from "./Furniture";
 import { SPOTS, type Vec3 } from "../_data/layout";
@@ -39,7 +40,8 @@ function screenTexture(projects: HideoutProject[]) {
 
 function Terminal() {
   const m = getMaterials();
-  const { projects, reducedMotion } = useHideout();
+  const { projects, reducedMotion, hovered } = useHideout();
+  const hot = hovered === "projects";
   const tex = useMemo(() => screenTexture(projects), [projects]);
   const cursor = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
@@ -56,7 +58,7 @@ function Terminal() {
       </mesh>
       <mesh position={[0, 0.235, 0.202]}>
         <planeGeometry args={[0.38, 0.3]} />
-        <meshBasicMaterial map={tex} toneMapped={false} />
+        <meshBasicMaterial map={tex} toneMapped={false} color={hot ? "#d8ffe8" : "#9ac8a8"} />
       </mesh>
       <mesh ref={cursor} position={[-0.16 + 0.045, 0.235 + 0.15 - (48 + rows * 36) * (0.3 / 400) + 0.02, 0.204]}>
         <planeGeometry args={[0.018, 0.022]} />
@@ -207,9 +209,6 @@ function Corkboard() {
   }, []);
   return (
     <group>
-      <mesh position={[-8.97, 1.9, -1.6]} material={m.wood}>
-        <boxGeometry args={[0.04, 1.1, 1.6]} />
-      </mesh>
       {notes.map((n, i) => (
         <mesh key={i} position={n.p} rotation={[0, Math.PI / 2, n.rot]} material={m.paper}>
           <planeGeometry args={n.s} />
@@ -264,8 +263,77 @@ function DeskAndChair() {
   );
 }
 
-function HangingBulb() {
-  const pos = toWorld([0.2, 2.3, 0.05]);
+function ClippingsWall() {
+  return (
+    <mesh position={[-8.985, 1.55, -1.25]} rotation={[0, Math.PI / 2, 0]}>
+      <planeGeometry args={[3.5, 3.1]} />
+      <meshStandardMaterial map={clippingsTexture()} roughness={0.95} />
+    </mesh>
+  );
+}
+
+function NookShelf() {
+  const m = getMaterials();
+  const { frame, papers } = useMemo(() => {
+    const frame: BoxItem[] = [];
+    const papers: BoxItem[] = [];
+    const x0 = -8.95;
+    const x1 = -7.75;
+    const cx = (x0 + x1) / 2;
+    const z = -2.75;
+    frame.push({ p: [x0 + 0.02, 1.2, z], s: [0.04, 2.4, 0.42] });
+    frame.push({ p: [x1 - 0.02, 1.2, z], s: [0.04, 2.4, 0.42] });
+    frame.push({ p: [cx, 1.2, z - 0.2], s: [x1 - x0, 2.4, 0.02] });
+    let s = 13;
+    const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i <= 5; i++) {
+      const y = 0.05 + i * 0.46;
+      frame.push({ p: [cx, y, z], s: [x1 - x0, 0.035, 0.42] });
+      if (i === 5) continue;
+      let x = x0 + 0.08;
+      while (x < x1 - 0.2) {
+        const w = 0.2 + r() * 0.16;
+        const hgt = 0.05 + r() * 0.26;
+        papers.push({ p: [x + w / 2, y + 0.02 + hgt / 2, z + (r() - 0.5) * 0.06], s: [w, hgt, 0.3], r: [0, (r() - 0.5) * 0.25, 0] });
+        x += w + 0.04 + r() * 0.1;
+      }
+    }
+    return { frame, papers };
+  }, []);
+  const scrolls = useMemo(
+    () =>
+      [
+        [-8.55, 2.42, -2.7, 0.05],
+        [-8.3, 2.43, -2.68, 0.06],
+        [-8.42, 2.52, -2.72, 0.045],
+        [-8.1, 0.56, -2.7, 0.05],
+      ] as [number, number, number, number][],
+    []
+  );
+  return (
+    <group>
+      <InstancedBoxes items={frame} material={m.darkWood} castShadow />
+      <InstancedBoxes items={papers} material={m.paper} />
+      {scrolls.map(([x, y, z, rad], i) => (
+        <mesh key={i} position={[x, y, z]} rotation={[0, 0.2 * i, Math.PI / 2]} material={m.paper}>
+          <cylinderGeometry args={[rad, rad, 0.5, 14]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function NookRug() {
+  return (
+    <mesh position={[-7.55, 0.008, -1.35]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <circleGeometry args={[1.0, 40]} />
+      <meshStandardMaterial map={rugTexture("teal")} roughness={0.95} />
+    </mesh>
+  );
+}
+
+function HangingBulb({ at = [0.2, 2.3, 0.05] as Vec3, light = true }: { at?: Vec3; light?: boolean }) {
+  const pos = toWorld(at);
   return (
     <group position={pos}>
       <mesh position={[0, 0.6, 0]}>
@@ -279,7 +347,7 @@ function HangingBulb() {
       <sprite scale={[0.8, 0.8, 1]}>
         <spriteMaterial map={glowTexture()} color="#ffb060" transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
       </sprite>
-      <pointLight color="#ffb070" intensity={6} distance={6} decay={2} />
+      {light && <pointLight color="#ffb070" intensity={6} distance={6} decay={2} />}
     </group>
   );
 }
@@ -300,6 +368,10 @@ export default function ProjectCorner() {
       <DeskAndChair />
       <Corkboard />
       <HangingBulb />
+      <HangingBulb at={[-0.55, 2.55, 0.25]} light={false} />
+      <ClippingsWall />
+      <NookShelf />
+      <NookRug />
       <Hotspot id="projects" target={{ kind: "feature", id: "projects" }} label="Projects" labelPosition={toWorld([0.05, 1.3, 0.1])}>
         <group position={SPOTS.desk} rotation={[0, YAW, 0]}>
           <Terminal />

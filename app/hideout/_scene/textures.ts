@@ -45,54 +45,301 @@ function hsl(h: number, s: number, l: number) {
   return `hsl(${h} ${s}% ${l}%)`;
 }
 
-export function parquetTexture() {
+function heightToNormal(height: Float32Array, S: number, strength: number) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = S;
+  const ctx = canvas.getContext("2d")!;
+  const img = ctx.createImageData(S, S);
+  const at = (x: number, y: number) => height[((y + S) % S) * S + ((x + S) % S)];
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) {
+      const dx = (at(x + 1, y) - at(x - 1, y)) * strength;
+      const dy = (at(x, y + 1) - at(x, y - 1)) * strength;
+      const inv = 1 / Math.hypot(dx, dy, 1);
+      const i = (y * S + x) * 4;
+      img.data[i] = (-dx * inv * 0.5 + 0.5) * 255;
+      img.data[i + 1] = (dy * inv * 0.5 + 0.5) * 255;
+      img.data[i + 2] = (inv * 0.5 + 0.5) * 255;
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return canvas;
+}
+
+function texFrom(canvas: HTMLCanvasElement, color: boolean, repeat: number, rotation = 0) {
+  const t = new THREE.CanvasTexture(canvas);
+  if (color) t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(repeat, repeat);
+  t.anisotropy = 8;
+  if (rotation) {
+    t.center.set(0.5, 0.5);
+    t.rotation = rotation;
+  }
+  return t;
+}
+
+let floorSet: { map: THREE.Texture; normalMap: THREE.Texture; roughnessMap: THREE.Texture } | null = null;
+
+// Herringbone parquet: ~9cm x 45cm planks with bevelled seams, per-plank tone and gloss.
+export function floorTextures() {
+  if (floorSet) return floorSet;
+  const S = 1024;
+  const W = 32;
+  const L = 128;
+  const color = document.createElement("canvas");
+  color.width = color.height = S;
+  const rough = document.createElement("canvas");
+  rough.width = rough.height = S;
+  const cx = color.getContext("2d")!;
+  const rx = rough.getContext("2d")!;
+  const height = new Float32Array(S * S);
+  cx.fillStyle = "#1a0f08";
+  cx.fillRect(0, 0, S, S);
+  rx.fillStyle = "rgb(0,235,0)";
+  rx.fillRect(0, 0, S, S);
+
+  const plank = (x: number, y: number, pw: number, ph: number) => {
+    const ox = ((x % S) + S) % S;
+    const oy = ((y % S) + S) % S;
+    const r = rand(ox * 7919 + oy * 104729 + 13);
+    const vertical = ph > pw;
+    const hue = 20 + r() * 9;
+    const sat = 34 + r() * 16;
+    const light = 15 + r() * 7;
+    const g = vertical ? cx.createLinearGradient(x, y, x, y + ph) : cx.createLinearGradient(x, y, x + pw, y);
+    g.addColorStop(0, hsl(hue, sat, light * (0.88 + r() * 0.1)));
+    g.addColorStop(1, hsl(hue + 3, sat, light * (1.0 + r() * 0.12)));
+    cx.fillStyle = g;
+    cx.fillRect(x + 1.2, y + 1.2, pw - 2.4, ph - 2.4);
+    cx.lineWidth = 0.8;
+    for (let k = 0; k < 7; k++) {
+      cx.strokeStyle = `rgba(${r() > 0.5 ? "12,6,2" : "120,72,38"},${0.12 + r() * 0.2})`;
+      cx.beginPath();
+      if (vertical) {
+        const gx = x + 3 + r() * (pw - 6);
+        cx.moveTo(gx, y + 2);
+        cx.bezierCurveTo(gx + r() * 3 - 1.5, y + ph * 0.3, gx + r() * 3 - 1.5, y + ph * 0.7, gx, y + ph - 2);
+      } else {
+        const gy = y + 3 + r() * (ph - 6);
+        cx.moveTo(x + 2, gy);
+        cx.bezierCurveTo(x + pw * 0.3, gy + r() * 3 - 1.5, x + pw * 0.7, gy + r() * 3 - 1.5, x + pw - 2, gy);
+      }
+      cx.stroke();
+    }
+    const gloss = Math.floor(60 + r() * 70);
+    rx.fillStyle = `rgb(0,${gloss},0)`;
+    rx.fillRect(x + 1.5, y + 1.5, pw - 3, ph - 3);
+    for (let yy = Math.max(0, Math.floor(y)); yy < Math.min(S, Math.ceil(y + ph)); yy++) {
+      for (let xx = Math.max(0, Math.floor(x)); xx < Math.min(S, Math.ceil(x + pw)); xx++) {
+        const e = Math.min(xx - x, x + pw - xx, yy - y, y + ph - yy);
+        height[yy * S + xx] = Math.min(1, Math.max(0, (e - 0.8) / 2.2));
+      }
+    }
+  };
+
+  for (let k = -12; k <= 12; k++) {
+    for (let i = -48; i <= 48; i++) {
+      const bx = i * W + k * L;
+      const by = i * W - k * L;
+      if (bx > S + L || by > S + L || bx < -2 * L || by < -2 * L) continue;
+      plank(bx, by, L, W);
+      plank(bx, by + W, W, L);
+    }
+  }
+
+  const rot = Math.PI / 4;
+  floorSet = {
+    map: texFrom(color, true, 5, rot),
+    normalMap: texFrom(heightToNormal(height, S, 1.6), false, 5, rot),
+    roughnessMap: texFrom(rough, false, 5, rot),
+  };
+  return floorSet;
+}
+
+let tuft: THREE.Texture | null = null;
+
+// Chesterfield diamond tufting: pillowed cells, creased seams and a dimple at every button.
+export function tuftNormalTexture() {
+  if (tuft) return tuft;
+  const S = 256;
+  const cells = 4;
+  const height = new Float32Array(S * S);
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) {
+      const u = ((x + y) / S) * cells;
+      const v = ((x - y) / S) * cells;
+      const fu = u - Math.floor(u);
+      const fv = v - Math.floor(v);
+      const pillow = Math.pow(Math.sin(Math.PI * fu) * Math.sin(Math.PI * fv), 0.45);
+      const du = Math.min(fu, 1 - fu);
+      const dv = Math.min(fv, 1 - fv);
+      const button = Math.exp(-(du * du + dv * dv) * 900) * 0.6;
+      height[y * S + x] = pillow - button;
+    }
+  }
+  const t = new THREE.CanvasTexture(heightToNormal(height, S, 5));
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 4;
+  tuft = t;
+  return t;
+}
+
+export function marbleTexture() {
   return make(
-    "parquet",
+    "marble",
     512,
     512,
-    (ctx, S) => {
-      const W = 16;
-      const L = 64;
-      ctx.fillStyle = "#120c08";
-      ctx.fillRect(0, 0, S, S);
-      const plank = (x: number, y: number, pw: number, ph: number) => {
-        const ox = ((x % S) + S) % S;
-        const oy = ((y % S) + S) % S;
-        const r = rand(ox * 7919 + oy * 104729 + 13);
-        const l = 13 + r() * 9;
-        ctx.fillStyle = hsl(24 + r() * 8, 32 + r() * 12, l);
-        ctx.fillRect(x + 0.6, y + 0.6, pw - 1.2, ph - 1.2);
-        ctx.strokeStyle = `rgba(0,0,0,${0.18 + r() * 0.15})`;
-        ctx.lineWidth = 0.7;
-        const vertical = ph > pw;
-        for (let g = 0; g < 4; g++) {
-          ctx.beginPath();
-          if (vertical) {
-            const gx = x + 2 + r() * (pw - 4);
-            ctx.moveTo(gx, y + 1);
-            ctx.bezierCurveTo(gx + r() * 2 - 1, y + ph * 0.3, gx + r() * 2 - 1, y + ph * 0.7, gx, y + ph - 1);
-          } else {
-            const gy = y + 2 + r() * (ph - 4);
-            ctx.moveTo(x + 1, gy);
-            ctx.bezierCurveTo(x + pw * 0.3, gy + r() * 2 - 1, x + pw * 0.7, gy + r() * 2 - 1, x + pw - 1, gy);
-          }
-          ctx.stroke();
+    (ctx, w, h) => {
+      const r = rand(91);
+      const g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, "#151b1c");
+      g.addColorStop(1, "#0c1112");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 26; i++) {
+        const gold = i % 7 === 0;
+        ctx.strokeStyle = gold ? `rgba(200,160,90,${0.25 + r() * 0.2})` : `rgba(170,200,190,${0.06 + r() * 0.14})`;
+        ctx.lineWidth = gold ? 1.2 : 0.6 + r() * 2.2;
+        ctx.beginPath();
+        let x = r() * w;
+        let y = -10;
+        ctx.moveTo(x, y);
+        while (y < h + 10) {
+          const nx = x + (r() - 0.45) * 60;
+          const ny = y + 20 + r() * 40;
+          ctx.quadraticCurveTo(x + (r() - 0.5) * 50, (y + ny) / 2, nx, ny);
+          x = nx;
+          y = ny;
         }
-        ctx.fillStyle = `rgba(255,220,180,${r() * 0.05})`;
-        ctx.fillRect(x + 1, y + 1, pw - 2, ph - 2);
-      };
-      for (let k = -12; k <= 12; k++) {
-        for (let i = -48; i <= 48; i++) {
-          const bx = i * W + k * L;
-          const by = i * W - k * L;
-          if (bx > S + L || by > S + L || bx < -2 * L || by < -2 * L) continue;
-          plank(bx, by, L, W);
-          plank(bx, by + W, W, L);
-        }
+        ctx.stroke();
       }
     },
-    { repeat: [9, 9], rotation: Math.PI / 4 }
+    { repeat: [1, 1] }
   );
+}
+
+export function brickTexture() {
+  return make(
+    "brick",
+    256,
+    256,
+    (ctx, w, h) => {
+      const r = rand(17);
+      ctx.fillStyle = "#1a0f0b";
+      ctx.fillRect(0, 0, w, h);
+      const bh = 16;
+      const bw = 40;
+      for (let row = 0; row < h / bh; row++) {
+        const off = row % 2 ? bw / 2 : 0;
+        for (let x = -bw; x < w + bw; x += bw) {
+          const l = 14 + r() * 12;
+          ctx.fillStyle = hsl(10 + r() * 14, 45, l);
+          ctx.fillRect(x + off + 1.5, row * bh + 1.5, bw - 3, bh - 3);
+        }
+      }
+      const soot = ctx.createLinearGradient(0, 0, 0, h);
+      soot.addColorStop(0, "rgba(0,0,0,0.85)");
+      soot.addColorStop(0.6, "rgba(0,0,0,0.35)");
+      soot.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = soot;
+      ctx.fillRect(0, 0, w, h);
+    },
+    { repeat: [1, 1] }
+  );
+}
+
+export function emberTexture() {
+  return make(
+    "embers",
+    256,
+    128,
+    (ctx, w, h) => {
+      const r = rand(23);
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 260; i++) {
+        const x = r() * w;
+        const y = r() * h;
+        const rad = 2 + r() * 9;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+        const hot = r();
+        g.addColorStop(0, hot > 0.7 ? "rgba(255,200,90,0.95)" : "rgba(255,90,20,0.8)");
+        g.addColorStop(1, "rgba(80,10,0,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+      }
+      const edge = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 2);
+      edge.addColorStop(0, "rgba(0,0,0,0)");
+      edge.addColorStop(1, "rgba(0,0,0,1)");
+      ctx.fillStyle = edge;
+      ctx.fillRect(0, 0, w, h);
+    },
+    {}
+  );
+}
+
+export function screenMeshTexture() {
+  return make(
+    "screen-mesh",
+    64,
+    64,
+    (ctx, w, h) => {
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(255,255,255,1)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= w; i += 4) {
+        ctx.beginPath();
+        ctx.moveTo(i + 0.5, 0);
+        ctx.lineTo(i + 0.5, h);
+        ctx.moveTo(0, i + 0.5);
+        ctx.lineTo(w, i + 0.5);
+        ctx.stroke();
+      }
+    },
+    { repeat: [24, 16], color: false }
+  );
+}
+
+export function clippingsTexture() {
+  return make("clippings", 1024, 1024, (ctx, w, h) => {
+    const r = rand(55);
+    ctx.fillStyle = "#2a1c12";
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 90; i++) {
+      const cw = 90 + r() * 200;
+      const ch = 110 + r() * 230;
+      const x = r() * (w + 100) - 50;
+      const y = r() * (h + 100) - 50;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate((r() - 0.5) * 0.18);
+      const tone = 150 + r() * 70;
+      ctx.fillStyle = `rgb(${tone + 20},${tone + 8},${tone - 25})`;
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.fillStyle = "rgba(30,24,18,0.85)";
+      ctx.fillRect(8, 8, cw - 16, 12 + r() * 10);
+      let ty = 34;
+      if (r() > 0.55) {
+        ctx.fillStyle = "rgba(40,34,28,0.55)";
+        ctx.fillRect(8, ty, cw * 0.55, ch * 0.3);
+        ty += ch * 0.3 + 6;
+      }
+      ctx.fillStyle = "rgba(40,32,24,0.45)";
+      const cols = cw > 160 ? 2 : 1;
+      const colW = (cw - 16 - (cols - 1) * 8) / cols;
+      for (let c = 0; c < cols; c++) {
+        for (let yy = ty; yy < ch - 8; yy += 6) ctx.fillRect(8 + c * (colW + 8), yy, colW * (0.7 + r() * 0.3), 2);
+      }
+      const edge = ctx.createLinearGradient(0, 0, cw, ch);
+      edge.addColorStop(0, "rgba(90,60,20,0.25)");
+      edge.addColorStop(1, "rgba(60,40,10,0)");
+      ctx.fillStyle = edge;
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.restore();
+    }
+  });
 }
 
 export function woodTexture() {
@@ -368,7 +615,7 @@ export function skylineTexture(layer: "far" | "mid") {
     (ctx, w, h) => {
       const r = rand(layer === "far" ? 5 : 11);
       ctx.clearRect(0, 0, w, h);
-      const body = layer === "far" ? "#232a3c" : "#151a26";
+      const body = layer === "far" ? "#1a1d2c" : "#0c0f18";
       let x = 0;
       while (x < w) {
         const bw = 30 + r() * (layer === "far" ? 70 : 110);

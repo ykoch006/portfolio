@@ -3,11 +3,11 @@
 import * as THREE from "three";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { glassMaterial, pointsMaterial, skyMaterial } from "./shaders";
+import { glassMaterial, pointsMaterial, shaftMaterial, skyMaterial } from "./shaders";
 import { facadeTexture, glowTexture, skylineTexture } from "./textures";
 import { InstancedBoxes, type BoxItem } from "./Instanced";
 import Hotspot from "./Hotspot";
-import { WINDOWS, windowGlassGeometry } from "./shell";
+import { WINDOWS, windowGlassGeometry, windowTop } from "./shell";
 import { ROOM } from "../_data/layout";
 import { useHideout } from "../_components/context";
 
@@ -94,7 +94,7 @@ function Tower({ day }: { day: boolean }) {
 
 function City({ day, fog }: { day: boolean; fog: number }) {
   const layers = useMemo(() => {
-    const far = new THREE.MeshBasicMaterial({ map: skylineTexture("far"), transparent: true, color: day ? "#8a96a8" : "#b8c0dc", fog: false, depthWrite: false });
+    const far = new THREE.MeshBasicMaterial({ map: skylineTexture("far"), transparent: true, color: day ? "#8a96a8" : "#ffffff", fog: false, depthWrite: false });
     const mid = new THREE.MeshBasicMaterial({ map: skylineTexture("mid"), transparent: true, color: day ? "#5a6474" : "#ffffff", fog: false, depthWrite: false });
     return { far, mid };
   }, [day]);
@@ -204,6 +204,43 @@ function Precipitation({ kind, intensity }: { kind: "rain" | "snow"; intensity: 
   return <points geometry={geo} material={mat} position={[0, -8, 0]} frustumCulled={false} />;
 }
 
+const SHAFT_DIR = new THREE.Vector3(-0.06, -0.62, 0.78).normalize();
+
+function LightShafts() {
+  const { sky, reducedMotion } = useHideout();
+  const mat = useMemo(() => shaftMaterial(sky.isDay ? "#e8f0f4" : "#8fd8d0"), [sky.isDay]);
+  const shafts = useMemo(() => {
+    const len = 9;
+    return WINDOWS.map((w) => {
+      const start = new THREE.Vector3(w.cx, (w.sill + windowTop(w)) / 2 + 0.6, -ROOM.halfD - 0.1);
+      const center = start.clone().addScaledVector(SHAFT_DIR, len / 2);
+      const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), SHAFT_DIR);
+      return { w: w.hw * 2.1, h: windowTop(w) - w.sill, len, center, q };
+    });
+  }, []);
+  const strength = (sky.isDay ? 0.07 : 0.05) * (1 - sky.cloud * 0.45) + sky.fog * 0.02;
+
+  useFrame(({ clock }) => {
+    mat.uniforms.uIntensity.value = strength * (1 + weatherFx.flash * 6);
+    mat.uniforms.uTime.value = reducedMotion ? 0 : clock.elapsedTime;
+  });
+
+  return (
+    <group>
+      {shafts.map((s, i) => (
+        <group key={i} position={s.center} quaternion={s.q}>
+          <mesh material={mat}>
+            <planeGeometry args={[s.w, s.len]} />
+          </mesh>
+          <mesh material={mat} rotation={[0, Math.PI / 2, 0]}>
+            <planeGeometry args={[s.h * 0.6, s.len]} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
 export default function Skyline() {
   const { sky, reducedMotion } = useHideout();
   const skyMat = useMemo(() => skyMaterial(), []);
@@ -241,6 +278,7 @@ export default function Skyline() {
       </mesh>
       <City day={sky.isDay} fog={sky.fog} />
       {sky.precip !== "none" && <Precipitation kind={sky.precip} intensity={sky.intensity} />}
+      <LightShafts />
       <Hotspot
         id="windows"
         target={{ kind: "feature", id: "windows" }}

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { parquetTexture, rugTexture, wallpaperTexture, woodTexture } from "./textures";
+import { floorTextures, rugTexture, tuftNormalTexture, wallpaperTexture, woodTexture } from "./textures";
 
 let mats: ReturnType<typeof build> | null = null;
 
@@ -14,28 +14,33 @@ function repeated(tex: THREE.Texture, rx: number, ry: number) {
 function build() {
   const wood = woodTexture();
   const std = (p: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial(p);
+  const floor = floorTextures();
+  const tuft = tuftNormalTexture();
+  const upholstery = (color: string, roughness: number) =>
+    std({ color, roughness, normalMap: tuft, normalScale: new THREE.Vector2(0.75, 0.75) });
   return {
-    floor: std({ map: parquetTexture(), roughness: 0.42, metalness: 0.05, color: "#c9b0a0" }),
-    darkWood: std({ map: wood, color: "#6b4a38", roughness: 0.55 }),
-    wood: std({ map: wood, color: "#a07458", roughness: 0.5 }),
+    floor: std({ ...floor, roughness: 1, metalness: 0, color: "#bfa792", normalScale: new THREE.Vector2(0.45, 0.45) }),
+    darkWood: std({ map: wood, color: "#6b4a38", roughness: 0.42 }),
+    wood: std({ map: wood, color: "#a07458", roughness: 0.45 }),
     blackWood: std({ map: wood, color: "#3a2a24", roughness: 0.6 }),
     panelWood: std({ map: repeated(wood, 2, 1), color: "#5a3a2a", roughness: 0.6 }),
     wallTeal: std({ map: wallpaperTexture("teal"), roughness: 0.9 }),
     wallRed: std({ map: wallpaperTexture("oxblood"), roughness: 0.9 }),
     backWall: std({ map: repeated(wallpaperTexture("teal"), 0.35, 0.35), roughness: 0.9 }),
     stone: std({ color: "#3a3532", roughness: 0.75 }),
-    marble: std({ color: "#2a2624", roughness: 0.3, metalness: 0.1 }),
+    marble: std({ color: "#2e2926", roughness: 0.22, metalness: 0.05 }),
     soot: std({ color: "#120a06", roughness: 1, emissive: "#3a1004", emissiveIntensity: 0.6, side: THREE.BackSide }),
     brass: std({ color: "#b8893a", roughness: 0.35, metalness: 0.9 }),
     iron: std({ color: "#1c1e20", roughness: 0.6, metalness: 0.7 }),
     windowFrame: std({ color: "#2c3f3a", roughness: 0.5, metalness: 0.3 }),
     plaster: std({ color: "#3a3a36", roughness: 0.95 }),
     ceiling: std({ map: repeated(wood, 6, 6), color: "#2a1a12", roughness: 0.8 }),
-    leather: std({ color: "#5a1e16", roughness: 0.45, metalness: 0.05 }),
-    leatherBrown: std({ color: "#4a2a18", roughness: 0.5 }),
-    velvetTeal: std({ color: "#1d3a3c", roughness: 0.85 }),
+    leather: upholstery("#6a2018", 0.38),
+    leatherBrown: upholstery("#5a3018", 0.4),
+    velvetTeal: upholstery("#22484a", 0.75),
     velvetBlue: std({ color: "#1c2a46", roughness: 0.9, side: THREE.DoubleSide }),
-    velvetGreen: std({ color: "#1e3328", roughness: 0.85 }),
+    velvetGreen: upholstery("#24402f", 0.75),
+    shade: std({ color: "#f0c890", roughness: 0.9, emissive: "#ff9a48", emissiveIntensity: 0.9, side: THREE.DoubleSide }),
     cushion: std({ color: "#5a4a7a", roughness: 0.9 }),
     cloth: std({ color: "#18221e", roughness: 0.95, side: THREE.DoubleSide }),
     paper: std({ color: "#d8c9a6", roughness: 0.95, side: THREE.DoubleSide }),

@@ -53,7 +53,11 @@
   gap: 18px;
   background: radial-gradient(ellipse at center, rgba(20, 28, 26, 0.92), #040608 75%);
   z-index: 40;
-  transition: opacity 600ms ease;
+  transition: opacity 650ms ease;
+}
+.loaderOut {
+  opacity: 0;
+  pointer-events: none;
 }
 .loaderTitle {
   margin: 0;

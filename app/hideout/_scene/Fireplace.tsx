@@ -5,10 +5,10 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { getMaterials } from "./materials";
 import { flameMaterial, pointsMaterial } from "./shaders";
-import { glowTexture, portraitTexture } from "./textures";
+import { brickTexture, emberTexture, glowTexture, marbleTexture, portraitTexture, screenMeshTexture } from "./textures";
 import { InstancedBoxes, type BoxItem } from "./Instanced";
 import Hotspot from "./Hotspot";
-import { Armchair, BookStack, CoffeeTable } from "./Furniture";
+import { BookStack, CoffeeTable } from "./Furniture";
 import { SPOTS, type Vec3 } from "../_data/layout";
 import { useHideout } from "../_components/context";
 
@@ -24,7 +24,8 @@ export const MANTEL_CANDLES: Vec3[] = [-1.45, -1.3, -1.15, 1.15, 1.3, 1.45].map(
 );
 
 function Flames() {
-  const { reducedMotion } = useHideout();
+  const { reducedMotion, hovered, quality } = useHideout();
+  const hot = hovered === "fireplace";
   const flames = useMemo(
     () =>
       [
@@ -69,8 +70,8 @@ function Flames() {
     const flicker = reducedMotion
       ? 1
       : 0.82 + Math.sin(t * 7.3) * 0.06 + Math.sin(t * 13.1 + 1.3) * 0.05 + Math.sin(t * 23.7) * 0.04;
-    if (light.current) light.current.intensity = 95 * flicker;
-    if (glow.current) (glow.current.material as THREE.MeshBasicMaterial).opacity = 0.55 * flicker;
+    if (light.current) light.current.intensity = (hot ? 58 : 46) * flicker;
+    if (glow.current) (glow.current.material as THREE.MeshBasicMaterial).opacity = 0.32 * flicker;
   });
 
   return (
@@ -90,7 +91,21 @@ function Flames() {
         <planeGeometry args={[3.2, 2.4]} />
         <meshBasicMaterial map={glowTexture()} color="#ff7a2a" transparent blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
-      <pointLight ref={light} position={[0, 0.7, 0.9]} color="#ff8a3c" intensity={95} distance={18} decay={2} />
+      <pointLight
+        ref={light}
+        position={[0, 0.75, 0.95]}
+        color="#ff8a3c"
+        intensity={46}
+        distance={16}
+        decay={2}
+        castShadow={quality === "high"}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-bias={-0.004}
+        shadow-radius={4}
+        shadow-camera-near={0.2}
+        shadow-camera-far={18}
+      />
     </group>
   );
 }
@@ -107,7 +122,7 @@ function Shelves({ z, width }: { z: number; width: number }) {
     frame.push({ p: [-width / 2, H / 2, 0], s: [0.08, H, D] });
     frame.push({ p: [width / 2, H / 2, 0], s: [0.08, H, D] });
     frame.push({ p: [0, H + 0.1, 0.02], s: [width + 0.3, 0.2, D + 0.1] });
-    const palette = ["#6a1e18", "#1e4a44", "#2a3060", "#7a5a20", "#3a2a1a", "#4a1a3a", "#2e2e2e", "#8a6a3a", "#1a3a26"];
+    const palette = ["#5a1e18", "#1e3e3a", "#262a4c", "#6a4e22", "#3a2a1a", "#3e1a30", "#2a2826", "#6e5634", "#1a3424", "#4a2a18"];
     let s = Math.floor(z * 1000) + 7;
     const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
     const rows = Math.floor(H / 0.44);
@@ -146,6 +161,153 @@ function Shelves({ z, width }: { z: number; width: number }) {
   );
 }
 
+const OPEN_W = 0.78;
+const OPEN_SPRING = 0.95;
+
+function surroundGeometry() {
+  const s = new THREE.Shape();
+  s.moveTo(-1.75, 0.12);
+  s.lineTo(1.75, 0.12);
+  s.lineTo(1.75, 1.9);
+  s.lineTo(-1.75, 1.9);
+  s.lineTo(-1.75, 0.12);
+  const hole = new THREE.Path();
+  hole.moveTo(-OPEN_W, 0.12);
+  hole.lineTo(OPEN_W, 0.12);
+  hole.lineTo(OPEN_W, OPEN_SPRING);
+  hole.absarc(0, OPEN_SPRING, OPEN_W, 0, Math.PI, false);
+  hole.lineTo(-OPEN_W, 0.12);
+  s.holes.push(hole);
+  const g = new THREE.ExtrudeGeometry(s, {
+    depth: 0.42,
+    bevelEnabled: true,
+    bevelThickness: 0.03,
+    bevelSize: 0.03,
+    bevelSegments: 3,
+    curveSegments: 32,
+  });
+  g.translate(0, 0, -0.2);
+  const uv = g.attributes.uv as THREE.BufferAttribute;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 0.28 + 0.5, uv.getY(i) * 0.28);
+  return g;
+}
+
+function Surround() {
+  const m = getMaterials();
+  const mats = useMemo(() => {
+    const marble = new THREE.MeshStandardMaterial({ map: marbleTexture(), roughness: 0.16, metalness: 0.05 });
+    const brick = new THREE.MeshStandardMaterial({
+      map: brickTexture(),
+      emissiveMap: brickTexture(),
+      emissive: "#ff5a1a",
+      emissiveIntensity: 0.25,
+      roughness: 0.95,
+      side: THREE.BackSide,
+    });
+    const embers = new THREE.MeshBasicMaterial({
+      map: emberTexture(),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      toneMapped: false,
+      color: new THREE.Color(2.2, 1.4, 1),
+    });
+    const mesh = new THREE.MeshStandardMaterial({
+      color: "#16181a",
+      metalness: 0.6,
+      roughness: 0.5,
+      alphaMap: screenMeshTexture(),
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    return { marble, brick, embers, mesh };
+  }, []);
+  const front = useMemo(() => surroundGeometry(), []);
+  const fluteGeo = useMemo(() => new THREE.CylinderGeometry(0.022, 0.022, 1.36, 8, 1, false, 0, Math.PI), []);
+
+  return (
+    <group>
+      <mesh position={[0, 0.05, 0.42]} material={mats.marble} receiveShadow>
+        <boxGeometry args={[4.1, 0.1, 1.4]} />
+      </mesh>
+      <mesh position={[0, 0.12, 0.3]} material={mats.marble} receiveShadow>
+        <boxGeometry args={[3.7, 0.05, 0.9]} />
+      </mesh>
+      <mesh geometry={front} material={mats.marble} castShadow receiveShadow />
+      <mesh position={[0, 0.85, -0.42]} material={mats.brick}>
+        <boxGeometry args={[1.7, 1.7, 0.56]} />
+      </mesh>
+      <mesh position={[0, 0.18, -0.25]} rotation={[-Math.PI / 2, 0, 0]} material={mats.embers}>
+        <planeGeometry args={[1.3, 0.55]} />
+      </mesh>
+      {[-1.42, 1.42].map((x) => (
+        <group key={x} position={[x, 0, 0.27]}>
+          <mesh position={[0, 0.27, 0]} material={m.darkWood}>
+            <boxGeometry args={[0.5, 0.3, 0.12]} />
+          </mesh>
+          {[-0.14, -0.07, 0, 0.07, 0.14].map((fx) => (
+            <mesh key={fx} geometry={fluteGeo} position={[fx, 1.1, 0.0]} rotation={[0, -Math.PI / 2, 0]} material={m.darkWood} />
+          ))}
+          <mesh position={[0, 1.1, -0.02]} material={m.darkWood}>
+            <boxGeometry args={[0.42, 1.36, 0.04]} />
+          </mesh>
+          <mesh position={[0, 1.82, 0.02]} material={m.brass}>
+            <boxGeometry args={[0.48, 0.05, 0.1]} />
+          </mesh>
+          <mesh position={[0, 1.87, 0.03]} material={m.darkWood}>
+            <boxGeometry args={[0.56, 0.06, 0.14]} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[0, OPEN_SPRING + OPEN_W + 0.04, 0.24]} material={m.brass}>
+        <boxGeometry args={[0.16, 0.2, 0.06]} />
+      </mesh>
+      <mesh position={[0, 1.91, 0.08]} material={m.darkWood}>
+        <boxGeometry args={[3.85, 0.06, 0.6]} />
+      </mesh>
+      <mesh position={[0, 1.96, 0.1]} material={m.brass}>
+        <boxGeometry args={[3.95, 0.025, 0.64]} />
+      </mesh>
+      <mesh position={[0, 2.02, 0.1]} material={m.darkWood} castShadow>
+        <boxGeometry args={[4.1, 0.1, 0.7]} />
+      </mesh>
+      <group position={[0, 0, 0.98]}>
+        <mesh position={[0, 0.2, 0]} rotation={[0, 0, Math.PI / 2]} material={m.brass}>
+          <cylinderGeometry args={[0.022, 0.022, 2.6, 10]} />
+        </mesh>
+        {[-1.3, 1.3].map((x) => (
+          <group key={x}>
+            <mesh position={[x, 0.2, -0.4]} rotation={[Math.PI / 2, 0, 0]} material={m.brass}>
+              <cylinderGeometry args={[0.022, 0.022, 0.8, 10]} />
+            </mesh>
+            <mesh position={[x, 0.24, 0]} material={m.brass}>
+              <sphereGeometry args={[0.045, 12, 10]} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+      <group position={[0, 0.12, 0.62]}>
+        <mesh position={[0, 0.52, 0]} material={mats.mesh}>
+          <planeGeometry args={[1.5, 1.0]} />
+        </mesh>
+        <mesh position={[0, 1.02, 0]} rotation={[0, 0, Math.PI / 2]} material={m.iron}>
+          <cylinderGeometry args={[0.012, 0.012, 1.52, 6]} />
+        </mesh>
+        {[-0.76, 0.76].map((x) => (
+          <mesh key={x} position={[x, 0.5, 0]} material={m.iron}>
+            <cylinderGeometry args={[0.014, 0.014, 1.04, 6]} />
+          </mesh>
+        ))}
+        <mesh position={[0, 1.02, 0]} rotation={[0, 0, 0]} material={m.iron}>
+          <torusGeometry args={[0.28, 0.012, 6, 24, Math.PI]} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
 export default function Fireplace() {
   const m = getMaterials();
   const portrait = portraitTexture();
@@ -164,34 +326,7 @@ export default function Fireplace() {
         labelPosition={fireplaceToWorld([0, 2.75, 0.4])}
       >
         <group position={SPOTS.fireplace} rotation={[0, YAW, 0]}>
-          <mesh position={[0, 0.06, 0.45]} material={m.marble} receiveShadow>
-            <boxGeometry args={[4.0, 0.12, 1.3]} />
-          </mesh>
-          {[-1.25, 1.25].map((x) => (
-            <group key={x}>
-              <mesh position={[x, 0.95, 0]} material={m.marble} castShadow>
-                <boxGeometry args={[0.9, 1.9, 0.6]} />
-              </mesh>
-              <mesh position={[x, 1.0, 0.31]} material={m.stone}>
-                <boxGeometry args={[0.55, 1.5, 0.04]} />
-              </mesh>
-              <mesh position={[x * 1.04, 0.12, 0.05]} material={m.marble}>
-                <boxGeometry args={[1.05, 0.24, 0.72]} />
-              </mesh>
-            </group>
-          ))}
-          <mesh position={[0, 1.65, 0]} material={m.marble} castShadow>
-            <boxGeometry args={[1.6, 0.5, 0.6]} />
-          </mesh>
-          <mesh position={[0, 0.7, -0.1]} material={m.soot}>
-            <boxGeometry args={[1.6, 1.4, 0.8]} />
-          </mesh>
-          <mesh position={[0, 1.97, 0.06]} material={m.darkWood} castShadow>
-            <boxGeometry args={[3.9, 0.12, 0.62]} />
-          </mesh>
-          <mesh position={[0, 2.08, 0.02]} material={m.darkWood}>
-            <boxGeometry args={[3.7, 0.1, 0.52]} />
-          </mesh>
+          <Surround />
           <mesh position={[0, 4.4, -0.2]} material={m.panelWood}>
             <boxGeometry args={[3.0, 4.6, 0.2]} />
           </mesh>
@@ -213,13 +348,10 @@ export default function Fireplace() {
             </mesh>
           </group>
           {logs.map((l, i) => (
-            <mesh key={i} position={l.p} rotation={l.r} material={m.log}>
+            <mesh key={i} position={l.p} rotation={l.r} material={m.log} castShadow>
               <cylinderGeometry args={[0.08, 0.09, 0.9, 10]} />
             </mesh>
           ))}
-          <mesh position={[0, 0.17, 0.12]} material={m.iron}>
-            <boxGeometry args={[1.2, 0.04, 0.5]} />
-          </mesh>
           {[-1.3, 1.3].map((x) => (
             <group key={x} position={[x, 2.14, 0.15]}>
               <mesh material={m.brass}>
@@ -252,11 +384,10 @@ export default function Fireplace() {
         ))}
       </group>
 
-      <CoffeeTable position={[6.9, 0, -1.5]} yaw={Math.PI / 2} />
-      <BookStack position={[6.95, 0.46, -1.15]} yaw={0.4} count={3} />
+      <CoffeeTable position={[6.55, 0, -1.5]} yaw={Math.PI / 2} />
+      <BookStack position={[6.6, 0.46, -1.15]} yaw={0.4} count={3} />
       <BookStack position={[7.7, 0, 0.9]} yaw={1.2} count={5} />
       <BookStack position={[7.4, 0, -4.2]} yaw={0.2} count={4} />
-      <Armchair position={[7.3, 0, 1.6]} yaw={-2.3} material={getMaterials().velvetTeal} />
     </>
   );
 }

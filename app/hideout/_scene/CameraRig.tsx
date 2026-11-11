@@ -42,11 +42,8 @@ export default function CameraRig() {
     }
   }, [view, reducedMotion]);
 
-  useEffect(() => {
-    const aspect = size.width / size.height;
-    cam.fov = aspect < 0.7 ? 76 : aspect < 1.1 ? 66 : aspect < 1.5 ? 60 : 56;
-    cam.updateProjectionMatrix();
-  }, [size, cam]);
+  const aspect = size.width / size.height;
+  const baseFov = aspect < 0.7 ? 76 : aspect < 1.1 ? 68 : aspect < 1.5 ? 63 : 60;
 
   useEffect(() => {
     const el = gl.domElement;
@@ -86,7 +83,14 @@ export default function CameraRig() {
   const endLook = useMemo(() => new THREE.Vector3(), []);
   const sph = useMemo(() => new THREE.Spherical(), []);
 
-  useFrame((_, dt) => {
+  useFrame((_, rawDt) => {
+    // a hidden tab can hand us one huge delta on return; keep moves smooth instead of snapping
+    const dt = Math.min(rawDt, 0.05);
+    const fovTarget = baseFov - (focus.kind === "room" ? 0 : 6);
+    if (Math.abs(cam.fov - fovTarget) > 0.01) {
+      cam.fov = reducedMotion ? fovTarget : cam.fov + (fovTarget - cam.fov) * Math.min(1, dt * 2.5);
+      cam.updateProjectionMatrix();
+    }
     endPos.set(...view.position);
     endLook.set(...view.target);
     if (progress.current < 1) {

@@ -112,6 +112,16 @@ function WindowFrames() {
         <mesh key={i} geometry={g} position={[0, 0, -halfD - 0.24]} material={m.windowFrame} castShadow />
       ))}
       <InstancedBoxes items={bars} material={m.windowFrame} castShadow />
+      {WINDOWS.filter((w) => w.arched).map((w) => (
+        <group key={w.cx} position={[w.cx, w.spring + w.hw * 0.32, -halfD - 0.17]}>
+          <mesh material={m.windowFrame} castShadow>
+            <torusGeometry args={[w.hw * 0.42, 0.035, 8, 40]} />
+          </mesh>
+          <mesh material={m.windowFrame} castShadow>
+            <torusGeometry args={[w.hw * 0.18, 0.03, 8, 28]} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
@@ -227,9 +237,9 @@ function Chandelier() {
 function Rugs() {
   const m = getMaterials();
   const rugs: { p: Vec3; s: [number, number]; mat: THREE.Material; r?: number }[] = [
-    { p: [6.7, 0.006, -1.5], s: [3.0, 4.8], mat: m.rugEmber },
-    { p: [-2.9, 0.006, 2.9], s: [4.6, 3.8], mat: m.rugTeal, r: 0.1 },
-    { p: [1.4, 0.006, 4.9], s: [3.4, 2.4], mat: m.rugWine },
+    { p: [6.35, 0.006, -1.5], s: [3.6, 5.4], mat: m.rugEmber },
+    { p: [-4.4, 0.006, 2.85], s: [4.2, 3.6], mat: m.rugTeal, r: 0.06 },
+    { p: [0.4, 0.006, 4.5], s: [3.8, 2.7], mat: m.rugWine },
     { p: [6.0, 0.006, 5.2], s: [2.2, 1.8], mat: m.rugTeal, r: 0.05 },
   ];
   return (
@@ -248,7 +258,7 @@ function Sigil() {
   return (
     <mesh position={[SPOTS.orbTable[0], 0.012, SPOTS.orbTable[2]]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[5.2, 5.2]} />
-      <meshBasicMaterial map={tex} color="#4dffc0" transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <meshBasicMaterial map={tex} color="#4dffc0" transparent opacity={0.4} blending={THREE.AdditiveBlending} depthWrite={false} />
     </mesh>
   );
 }
@@ -323,6 +333,80 @@ function Exit() {
   );
 }
 
+type SconceSpec = { p: Vec3; yaw: number; tone: "warm" | "spectral" };
+
+export const SCONCES: SconceSpec[] = [
+  { p: [-halfW + 0.04, 3.2, 6.9], yaw: Math.PI / 2, tone: "warm" },
+  { p: [-halfW + 0.04, 4.4, 2.0], yaw: Math.PI / 2, tone: "warm" },
+  { p: [-halfW + 0.04, 5.8, -1.0], yaw: Math.PI / 2, tone: "warm" },
+  { p: [-4.25, 2.7, -halfD + 0.23], yaw: 0, tone: "spectral" },
+  { p: [4.25, 2.7, -halfD + 0.23], yaw: 0, tone: "spectral" },
+  { p: [halfW - 0.23, 2.7, -6.8], yaw: -Math.PI / 2, tone: "warm" },
+  { p: [halfW - 0.23, 2.7, 3.9], yaw: -Math.PI / 2, tone: "warm" },
+];
+
+function Sconces() {
+  const m = getMaterials();
+  const glass = useMemo(
+    () => ({
+      warm: new THREE.MeshStandardMaterial({ color: "#ffe2b0", emissive: "#ffa850", emissiveIntensity: 1.4, roughness: 0.4 }),
+      spectral: new THREE.MeshStandardMaterial({ color: "#c8ffe8", emissive: "#3dffb0", emissiveIntensity: 1.6, roughness: 0.4 }),
+    }),
+    []
+  );
+  const tulip = useMemo(() => new THREE.CylinderGeometry(0.07, 0.035, 0.13, 14, 1, true), []);
+  return (
+    <>
+      {SCONCES.map((sc, i) => (
+        <group key={i} position={sc.p} rotation={[0, sc.yaw, 0]}>
+          <mesh position={[0, 0, 0.02]} material={m.brass}>
+            <boxGeometry args={[0.13, 0.36, 0.04]} />
+          </mesh>
+          <mesh position={[0, -0.2, 0.02]} material={m.brass}>
+            <sphereGeometry args={[0.035, 10, 8]} />
+          </mesh>
+          <mesh position={[0, 0.02, 0.1]} rotation={[Math.PI / 2, 0, 0]} material={m.brass}>
+            <cylinderGeometry args={[0.012, 0.012, 0.16, 6]} />
+          </mesh>
+          <mesh position={[0, 0.02, 0.17]} rotation={[0, 0, Math.PI / 2]} material={m.brass}>
+            <cylinderGeometry args={[0.012, 0.012, 0.34, 6]} />
+          </mesh>
+          {[-1, 1].map((s) => (
+            <group key={s}>
+              <mesh position={[s * 0.16, 0.06, 0.17]} material={m.brass}>
+                <cylinderGeometry args={[0.03, 0.015, 0.06, 10]} />
+              </mesh>
+              <mesh geometry={tulip} material={glass[sc.tone]} position={[s * 0.16, 0.15, 0.17]} />
+              <sprite position={[s * 0.16, 0.16, 0.19]} scale={[0.9, 0.9, 1]}>
+                <spriteMaterial
+                  map={glowTexture()}
+                  color={sc.tone === "warm" ? "#ff9a48" : "#3dffb0"}
+                  transparent
+                  opacity={0.4}
+                  blending={THREE.AdditiveBlending}
+                  depthWrite={false}
+                />
+              </sprite>
+            </group>
+          ))}
+          <mesh position={[0, 0.1, 0.01]}>
+            <planeGeometry args={[1.6, 2.2]} />
+            <meshBasicMaterial
+              map={glowTexture()}
+              color={sc.tone === "warm" ? "#ff8a3a" : "#2affa8"}
+              transparent
+              opacity={0.16}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
+      ))}
+      <pointLight position={[-halfW + 0.6, 4.6, 1.2]} color="#ffa660" intensity={9} distance={10} decay={2} />
+    </>
+  );
+}
+
 export default function Room() {
   return (
     <group>
@@ -335,6 +419,7 @@ export default function Room() {
       <Rugs />
       <Sigil />
       <Paintings />
+      <Sconces />
       <Exit />
     </group>
   );

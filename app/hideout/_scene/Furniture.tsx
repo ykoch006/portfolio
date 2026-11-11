@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { getMaterials } from "./materials";
+import { glowTexture } from "./textures";
 import type { Vec3 } from "../_data/layout";
 
 type Part = { geo: THREE.BufferGeometry; pos: Vec3; rot?: Vec3 };
@@ -53,6 +54,21 @@ export function armchairGeometry(tall = false) {
   });
 }
 
+function turnedLeg(h: number) {
+  const pts = [
+    [0.0, 0],
+    [0.028, 0],
+    [0.034, 0.12],
+    [0.044, 0.35],
+    [0.03, 0.55],
+    [0.042, 0.72],
+    [0.036, 0.9],
+    [0.045, 1],
+    [0.0, 1],
+  ].map(([r, y]) => new THREE.Vector2(r, y * h));
+  return new THREE.LatheGeometry(pts, 10);
+}
+
 function legsGeometry(w: number, d: number, h: number) {
   return geo(`legs-${w}-${d}-${h}`, () =>
     merge(
@@ -61,7 +77,7 @@ function legsGeometry(w: number, d: number, h: number) {
         [w / 2, -d / 2],
         [-w / 2, d / 2],
         [w / 2, d / 2],
-      ].map(([x, z]) => ({ geo: cyl(0.035, 0.025, h, 8), pos: [x, h / 2, z] as Vec3 }))
+      ].map(([x, z]) => ({ geo: turnedLeg(h), pos: [x, 0, z] as Vec3 }))
     )
   );
 }
@@ -167,6 +183,39 @@ export function Bottles({ position, count = 4, seed = 1 }: { position: Vec3; cou
           />
         );
       })}
+    </group>
+  );
+}
+
+export function FloorLamp({ position }: { position: Vec3 }) {
+  const m = getMaterials();
+  const pole = geo("lamp-pole", () =>
+    new THREE.LatheGeometry(
+      [
+        [0, 0],
+        [0.17, 0],
+        [0.17, 0.03],
+        [0.06, 0.07],
+        [0.02, 0.12],
+        [0.016, 1.5],
+        [0.03, 1.55],
+        [0.0, 1.56],
+      ].map(([r, y]) => new THREE.Vector2(r, y)),
+      16
+    )
+  );
+  const shade = geo("lamp-shade", () => new THREE.CylinderGeometry(0.17, 0.27, 0.3, 20, 1, true));
+  return (
+    <group position={position}>
+      <mesh geometry={pole} material={m.brass} castShadow />
+      <mesh geometry={shade} position={[0, 1.6, 0]} material={m.shade} />
+      <sprite position={[0, 1.58, 0]} scale={[1.6, 1.6, 1]}>
+        <spriteMaterial map={glowTexture()} color="#ff9a50" transparent opacity={0.28} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </sprite>
+      <mesh position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[3.2, 3.2]} />
+        <meshBasicMaterial map={glowTexture()} color="#ff9040" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
     </group>
   );
 }

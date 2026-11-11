@@ -9,27 +9,27 @@ export const SPOTS = {
   orbTable: [0, 0, -5] as Vec3,
   lectern: [6.6, 0, 5.2] as Vec3,
   desk: [-8.25, 0, -1.6] as Vec3,
-  loungeTable: [-2.9, 0, 2.6] as Vec3,
+  loungeTable: [-4.4, 0, 2.7] as Vec3,
+  sofa: [4.55, 0, -1.5] as Vec3,
   chandelier: [0, 6.4, 0] as Vec3,
 };
 
-export type Seat = { position: Vec3; facing: Vec3 };
+export type Seat = { position: Vec3; facing: Vec3; kind?: "armchair" | "sofa" };
 
-const toFire: Vec3 = [8.6, 0, -1.5];
 const toLounge: Vec3 = SPOTS.loungeTable;
 const toOrb: Vec3 = SPOTS.orbTable;
 
 // order = which seat the newest ghost takes
 export const GHOST_SEATS: Seat[] = [
-  { position: [5.0, 0, -1.5], facing: toFire },
-  { position: [-4.3, 0, 2.2], facing: toLounge },
-  { position: [5.4, 0, -3.7], facing: toFire },
-  { position: [-1.6, 0, 1.6], facing: toLounge },
-  { position: [5.4, 0, 0.7], facing: toFire },
-  { position: [-4.4, 0, -5.0], facing: toOrb },
-  { position: [-2.6, 0, 4.1], facing: toLounge },
-  { position: [4.2, 0, -5.7], facing: toOrb },
-  { position: [2.7, 0, 1.4], facing: toFire },
+  { position: [4.6, 0, -2.1], facing: [9, 0, -2.1], kind: "sofa" },
+  { position: [6.05, 0, -4.05], facing: [7.4, 0, -1.6] },
+  { position: [-3.2, 0, 1.75], facing: toLounge },
+  { position: [-3.5, 0, -5.1], facing: toOrb },
+  { position: [6.05, 0, 1.05], facing: [7.4, 0, -1.4] },
+  { position: [4.6, 0, -0.9], facing: [9, 0, -0.9], kind: "sofa" },
+  { position: [-5.6, 0, 1.85], facing: toLounge },
+  { position: [3.5, 0, -5.5], facing: toOrb },
+  { position: [-4.6, 0, 3.95], facing: toLounge },
 ];
 
 export const EMPTY_SEAT: Seat = { position: [5.45, 0, 5.2], facing: SPOTS.lectern };
@@ -39,8 +39,8 @@ export type FeatureId = "fireplace" | "orb" | "windows" | "projects" | "guestboo
 type Framing = { desktop: View; mobile: View };
 
 export const ROOM_VIEW: Framing = {
-  desktop: { position: [-1.2, 2.7, 7.3], target: [1.6, 1.8, -2.5] },
-  mobile: { position: [0.2, 3.2, 7.6], target: [0.2, 1.6, -2.0] },
+  desktop: { position: [-0.3, 2.9, 7.75], target: [0.5, 2.45, -3.0] },
+  mobile: { position: [0.1, 3.0, 7.7], target: [0.1, 2.55, -3.0] },
 };
 
 export const FEATURE_VIEWS: Record<FeatureId, Framing> = {
@@ -61,7 +61,7 @@ export const FEATURE_VIEWS: Record<FeatureId, Framing> = {
     mobile: { position: [-4.0, 2.0, 1.0], target: [-8.4, 1.1, -1.7] },
   },
   guestbook: {
-    desktop: { position: [4.3, 2.0, 7.3], target: [6.4, 0.85, 4.9] },
+    desktop: { position: [4.5, 2.45, 7.25], target: [6.45, 0.8, 4.95] },
     mobile: { position: [4.0, 2.2, 7.5], target: [6.3, 0.85, 4.9] },
   },
 };

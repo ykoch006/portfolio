@@ -83,7 +83,7 @@ function Keeper() {
         color: "#2e3f3c",
         roughness: 0.9,
         emissive: "#06281f",
-        emissiveIntensity: 0.6,
+        emissiveIntensity: 0.3,
         side: THREE.DoubleSide,
       }),
     []
@@ -215,9 +215,9 @@ function Orb() {
     mat.uniforms.uPulse.value = pulse;
     const b = mat.uniforms.uBoost;
     b.value += ((hot ? 1 : 0) - b.value) * Math.min(1, dt * 5);
-    const base = playing ? 8 : 6;
+    const base = playing ? 4.2 : 3.4;
     if (light.current) light.current.intensity = base * (1 + pulse * 0.25 + b.value * 0.3 + Math.sin(t * 1.3) * 0.06);
-    if (halo.current) halo.current.material.opacity = 0.5 + pulse * 0.2 + b.value * 0.25;
+    if (halo.current) halo.current.material.opacity = 0.26 + pulse * 0.12 + b.value * 0.15;
     if (orb.current && !reducedMotion) orb.current.rotation.y = t * 0.2;
   });
 
@@ -226,13 +226,13 @@ function Orb() {
       <mesh ref={orb} material={mat}>
         <sphereGeometry args={[0.17, 40, 32]} />
       </mesh>
-      <sprite ref={halo} scale={[1.6, 1.6, 1]}>
+      <sprite ref={halo} scale={[1.1, 1.1, 1]}>
         <spriteMaterial map={glowTexture()} color="#5dffc8" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
       </sprite>
-      <sprite scale={[5, 4, 1]} position={[0, 0.2, -0.3]}>
-        <spriteMaterial map={glowTexture()} color="#1d8a66" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <sprite scale={[4, 3.2, 1]} position={[0, 0.2, -0.3]}>
+        <spriteMaterial map={glowTexture()} color="#1d8a66" transparent opacity={0.09} blending={THREE.AdditiveBlending} depthWrite={false} />
       </sprite>
-      <pointLight ref={light} color="#5cffc4" intensity={6} distance={8} decay={2} position={[0, 0.05, 0.12]} />
+      <pointLight ref={light} color="#5cffc4" intensity={3.4} distance={8} decay={1.6} position={[0, 0.32, 0.18]} />
     </group>
   );
 }
