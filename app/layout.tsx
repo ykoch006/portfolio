@@ -3,7 +3,6 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "y.koc — notyuk",
-  description: "mashups, photographs and unreleased demos by yuksel koc.",
 };
 
 export const viewport: Viewport = {

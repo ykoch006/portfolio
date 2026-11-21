@@ -61,6 +61,7 @@ export default async function HomePage() {
 
           <nav className={styles.nav}>
             <Link href="/soft-shoulder">music</Link>
+            <Link href="/drive">drive</Link>
           </nav>
         </div>
 

@@ -1,0 +1,172 @@
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #c4c8cf;
+  color: #1b2333;
+  font-size: 13px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+.stage[data-time="dusk"] {
+  background: #1b2236;
+  color: #c9d2ea;
+}
+.home,
+.tools button,
+.speed,
+.hint,
+.prompt {
+  position: absolute;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.stage[data-time="dusk"] :is(.home, .tools button, .speed, .hint, .prompt) {
+  text-shadow: 0 1px 2px rgba(8, 10, 18, 0.8);
+}
+.prompt {
+  left: 50%;
+  bottom: 18%;
+  margin: 0;
+  transform: translateX(-50%);
+  font-size: 15px;
+  white-space: nowrap;
+}
+.home {
+  left: 16px;
+  top: 14px;
+  text-decoration: none;
+}
+.home:hover { text-decoration: underline; }
+.tools {
+  position: absolute;
+  right: 16px;
+  top: 14px;
+  display: flex;
+  gap: 16px;
+}
+.tools button {
+  position: static;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tools button:hover { text-decoration: underline; }
+
+/* car-stereo radio: a small screen for the video, plain word buttons */
+.radio {
+  position: absolute;
+  left: 16px;
+  top: 40px;
+  width: 216px;
+  padding: 8px;
+  background: rgba(14, 16, 22, 0.82);
+  border: 1px solid rgba(201, 210, 234, 0.18);
+  color: #c9d2ea;
+  font-size: 12px;
+  transition: opacity 200ms ease;
+}
+.radio[data-open="false"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.radioHead {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: #7fd3a0;
+  letter-spacing: 0.04em;
+}
+.radioHead button,
+.radioKeys button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #c9d2ea;
+  font-size: 12px;
+  cursor: pointer;
+}
+.radioHead button:hover,
+.radioKeys button:hover { text-decoration: underline; }
+.radioScreen {
+  width: 200px;
+  height: 200px;
+  background: #000;
+}
+.radioScreen iframe { display: block; border: 0; }
+.radioTitle {
+  margin: 6px 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.radioKeys {
+  display: flex;
+  justify-content: space-between;
+}
+
+.hint {
+  left: 16px;
+  bottom: 14px;
+  margin: 0;
+  max-width: 60ch;
+  transition: opacity 600ms ease;
+}
+.hint[data-hidden="true"] { opacity: 0; }
+.speed {
+  right: 16px;
+  bottom: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.failed {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+}
+
+.pad { display: none; }
+
+@media (pointer: coarse) {
+  .hint { display: none; }
+  .speed { bottom: auto; top: 40px; }
+  .pad {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 12px calc(12px + env(safe-area-inset-bottom));
+    pointer-events: none;
+  }
+  .padSide { display: flex; align-items: flex-end; gap: 8px; pointer-events: auto; }
+  .padSide:last-child {
+    display: grid;
+    grid-template-columns: repeat(2, 64px);
+    gap: 8px;
+  }
+  .padSide:last-child .padBtn:first-child { grid-column: 1 / -1; width: auto; height: 44px; }
+  .padBtn {
+    width: 64px;
+    height: 64px;
+    border: 1px solid rgba(27, 35, 51, 0.35);
+    background: rgba(255, 255, 255, 0.28);
+    color: inherit;
+    font-size: 13px;
+    touch-action: none;
+  }
+  .padBtn:active { background: rgba(255, 255, 255, 0.55); }
+  .stage[data-time="dusk"] .padBtn { border-color: rgba(201, 210, 234, 0.3); background: rgba(12, 16, 25, 0.35); }
+  .prompt { bottom: 190px; }
+  .tools { gap: 12px; }
+}

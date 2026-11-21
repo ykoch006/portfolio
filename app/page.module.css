@@ -195,9 +195,9 @@
 .spins {
   display: flex;
   align-items: flex-end;
-  padding: 0 0 3px 4px;
+  padding: 8px 0 3px 4px;
   border-bottom: 1px solid var(--line);
-  overflow: hidden;
+  overflow-x: clip;
 }
 .spinRecord {
   position: relative;
