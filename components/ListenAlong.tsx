@@ -85,7 +85,7 @@ export default function ListenAlong({ title, artist, progressMs, durationMs, fet
 
   return (
     <button type="button" className={styles.listenAlong} onClick={openListenAlong} disabled={loading}>
-      {loading ? "finding it…" : notFound ? "couldn't find it" : "▶ listen along"}
+      {loading ? "finding it…" : notFound ? "couldn't find it" : "listen along"}
     </button>
   );
 }

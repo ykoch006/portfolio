@@ -10,9 +10,9 @@ export default function ThemeToggle({ className }: { className?: string }) {
   };
 
   return (
-    <button type="button" onClick={toggle} className={className} aria-label="toggle dark mode">
-      <span className="if-dark" aria-hidden="true">☀</span>
-      <span className="if-light" aria-hidden="true">☾</span>
+    <button type="button" onClick={toggle} className={className}>
+      <span className="if-dark">light</span>
+      <span className="if-light">dark</span>
     </button>
   );
 }

@@ -1,8 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Mono } from "next/font/google";
 import "./globals.css";
-
-const mono = Space_Mono({ variable: "--font-mono", subsets: ["latin"], weight: ["400", "700"] });
 
 export const metadata: Metadata = {
   title: "y.koc — notyuk",
@@ -11,8 +8,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ece7d9" },
-    { media: "(prefers-color-scheme: dark)", color: "#16140f" },
+    { media: "(prefers-color-scheme: light)", color: "#dfe4ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c1019" },
   ],
 };
 
@@ -20,7 +17,7 @@ const themeScript = `(function(){try{var s=localStorage.getItem('theme');var t=(
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={mono.variable} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

@@ -15,7 +15,7 @@ export default function BlogIndex() {
     <div className={styles.root}>
       <div className={styles.page}>
         <div className={styles.head}>
-          <Link href="/" className={styles.home}>← index</Link>
+          <Link href="/" className={styles.home}>index</Link>
           <h1>writing / {pad(total)} entries</h1>
         </div>
 

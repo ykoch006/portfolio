@@ -8,6 +8,14 @@ export const youtube = {
   },
 };
 
+export const release = {
+  title: "soft shoulder",
+  artist: "notyuk",
+  audio: "/demos/to-see-you.mp3",
+  spotify: "https://open.spotify.com/album/6qLCJMGNLMKHHidBKhDe1J",
+  banner: "/snow-road.jpg",
+};
+
 export const contact = {
   email: "ykoch006@gmail.com",
   github: "https://github.com/ykoch006",

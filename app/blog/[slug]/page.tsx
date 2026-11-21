@@ -34,7 +34,7 @@ export default async function PostPage({
     <div className={styles.root}>
       <div className={styles.page}>
         <div className={styles.head}>
-          <Link href="/blog" className={styles.home}>← writing</Link>
+          <Link href="/blog" className={styles.home}>writing</Link>
           <span className={styles.label}>{fullDate(post.date)}</span>
         </div>
 
@@ -45,8 +45,8 @@ export default async function PostPage({
         </article>
 
         <div className={styles.postNav}>
-          <Link href="/blog">← all entries</Link>
-          <Link href="/">index →</Link>
+          <Link href="/blog">all entries</Link>
+          <Link href="/">index</Link>
         </div>
       </div>
     </div>

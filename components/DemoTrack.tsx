@@ -161,7 +161,7 @@ export default function DemoTrack({
         aria-label={playing ? "pause" : "play"}
         data-playing={playing}
       >
-        {playing ? "❚❚" : "▶"}
+        {playing ? "pause" : "play"}
       </button>
 
       <div className={styles.trackInfo}>

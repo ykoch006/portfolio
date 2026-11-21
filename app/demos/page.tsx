@@ -28,7 +28,7 @@ export default async function DemosIndex({
     <div className={styles.root}>
       <div className={styles.page}>
         <div className={styles.head}>
-          <Link href="/" className={styles.home}>← index</Link>
+          <Link href="/" className={styles.home}>index</Link>
           <h1>demos / {pad(total)} tracks</h1>
         </div>
 

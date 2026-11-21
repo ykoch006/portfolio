@@ -28,7 +28,7 @@ export default function FeaturedMix() {
               fetchPriority="high"
               sizes="(max-width: 900px) 100vw, 620px"
             />
-            <span className={styles.mixPlayIcon} aria-hidden="true">▶</span>
+            <span className={styles.mixPlayIcon} aria-hidden="true">play</span>
             <span className={styles.sr}>play {title}</span>
           </button>
         )}
@@ -37,7 +37,7 @@ export default function FeaturedMix() {
         <span className={styles.mixLabel}>latest mashup</span>
         <span className={styles.mixTitle}>{title}</span>
         <a href={`https://www.youtube.com/watch?v=${id}`} target="_blank" rel="noreferrer">
-          watch on youtube ↗
+          watch on youtube
         </a>
       </figcaption>
     </figure>

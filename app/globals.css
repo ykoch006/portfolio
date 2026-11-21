@@ -1,22 +1,22 @@
 :root {
-  --paper: #ece7d9;
-  --ink: #0f0f0f;
-  --mute-1: #5a544b;
-  --mute-2: #6c655b;
-  --line: #b9b1a2;
-  --accent: #ff6c2f;
-  --blue: #005f98;
-  --font: var(--font-mono), "SF Mono", Consolas, Menlo, monospace;
+  --paper: #dfe4ef;
+  --ink: #121a2b;
+  --mute-1: #4b5776;
+  --mute-2: #5a6684;
+  --line: #b3bcd1;
+  --accent: #2b8a56;
+  --blue: #2d4a8a;
+  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color-scheme: light;
 }
 html[data-theme="dark"] {
-  --paper: #16140f;
-  --ink: #ece7d9;
-  --mute-1: #b3a99a;
-  --mute-2: #9d9282;
-  --line: #3d3830;
-  --accent: #ff7a3d;
-  --blue: #5fb4ea;
+  --paper: #0c1019;
+  --ink: #c9d2ea;
+  --mute-1: #7f8bb0;
+  --mute-2: #6f7ba0;
+  --line: #26304a;
+  --accent: #5fd38d;
+  --blue: #9fb2e6;
   color-scheme: dark;
 }
 
@@ -28,8 +28,8 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font);
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   transition: background-color 200ms ease, color 200ms ease;
 }
