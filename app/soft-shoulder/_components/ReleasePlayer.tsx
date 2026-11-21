@@ -256,7 +256,7 @@ export default function ReleasePlayer({
     <div ref={playerRef} className={styles.player}>
       <div className={styles.stage}>
         {noWebGL ? (
-          <Image src={banner} alt="" fill sizes="(max-width: 700px) 100vw, 960px" className={styles.still} />
+          <Image src={banner} alt="" fill unoptimized className={styles.still} />
         ) : (
           <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
         )}

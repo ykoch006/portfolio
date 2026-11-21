@@ -39,7 +39,7 @@ export default async function HomePage({
           alt="a snowy road at dusk"
           fill
           priority
-          sizes="100vw"
+          unoptimized
           className={styles.heroImg}
         />
         <div className={styles.caption}>
@@ -71,9 +71,8 @@ export default async function HomePage({
         </div>
 
         <main id="main" className={styles.grid}>
-          <section id="music" className={styles.music} aria-labelledby="music-h">
+          <section id="music" className={styles.music} aria-label="music">
             <div className={styles.head}>
-              <h2 id="music-h" className={styles.h2}>music</h2>
               <a className={styles.cta} href={youtube.channelUrl} target="_blank" rel="noreferrer">
                 more on youtube
               </a>

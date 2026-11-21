@@ -83,6 +83,7 @@
   gap: 6px 18px;
   margin-top: 22px;
 }
+.nav a { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ─── grid ─── */
 .grid {
@@ -95,7 +96,7 @@
 }
 
 /* ─── music ─── */
-.cta { font-size: 13px; color: var(--mute-1); }
+.cta { margin-left: auto; font-size: 13px; color: var(--mute-1); }
 
 .mix { margin: 0; }
 .mixScreen {
