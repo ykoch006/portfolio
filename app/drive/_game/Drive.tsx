@@ -129,8 +129,8 @@ export default function Drive() {
 
       <p className={styles.hint} data-hidden={!hint}>
         {mode === "drive"
-          ? "wasd or arrows to drive, space to drift, drag to look around, e to get out, r to reset"
-          : "wasd to walk, shift to run, space to jump, drag to look around, e to get back in"}
+          ? "wasd or arrows to drive, space to drift, click to look with the mouse (esc to free it), e to get out, r to reset"
+          : "wasd to walk, shift to run, space to jump, click to look with the mouse (esc to free it), e to get back in"}
       </p>
       {prompt && <p className={styles.prompt}>{prompt}</p>}
       <span ref={speedRef} className={styles.speed}>0 km/h</span>

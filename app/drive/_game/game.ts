@@ -203,18 +203,34 @@ export function createGame(
   window.addEventListener("keyup", ku);
   window.addEventListener("blur", blur);
 
-  // drag to swing the camera: around the girl on foot, around the truck while driving
+  // swing the camera: around the girl on foot, around the truck while driving.
+  // a mouse click locks the pointer to the game (esc lets go); touch still drags
   let orbit = 0;
   let lookAround = 0;
   let dragging = false;
-  const pd = () => {
+  let lastLook = 0;
+  const locked = () => document.pointerLockElement === canvas;
+  const pd = (e: PointerEvent) => {
+    if (e.pointerType === "mouse" && !locked()) {
+      try {
+        const p = canvas.requestPointerLock() as unknown as Promise<void> | undefined;
+        p?.catch?.(() => {});
+      } catch {}
+    }
     dragging = true;
   };
   const pm = (e: PointerEvent) => {
-    if (dragging) orbit -= e.movementX * 0.008;
+    if (locked()) {
+      orbit -= e.movementX * 0.004;
+      lastLook = performance.now();
+    } else if (dragging) orbit -= e.movementX * 0.008;
   };
   const pu = () => (dragging = false);
+  // free look while locked: the view eases back behind the car a moment after the mouse goes still
+  const looking = () => dragging || (locked() && performance.now() - lastLook < 900);
+  const noMenu = (e: Event) => e.preventDefault();
   canvas.addEventListener("pointerdown", pd);
+  canvas.addEventListener("contextmenu", noMenu);
   window.addEventListener("pointermove", pm);
   window.addEventListener("pointerup", pu);
 
@@ -451,12 +467,12 @@ export function createGame(
       // a drag swings the view round the truck; let go and it eases back behind
       lookAround += orbit;
       orbit = 0;
-      if (!dragging) lookAround *= Math.exp(-dt * 1.4);
+      if (!looking()) lookAround *= Math.exp(-dt * 1.4);
       const view = camYaw + lookAround;
       const dist = car.spec.camDist + speed * 0.07;
       const hgt = car.spec.camHeight + speed * 0.03;
       v3.set(car.x - Math.sin(view) * dist, car.y + hgt, car.z - Math.cos(view) * dist);
-      camPos.lerp(v3, 1 - Math.exp(-dt * (dragging ? 12 : 6)));
+      camPos.lerp(v3, 1 - Math.exp(-dt * (looking() ? 12 : 6)));
       const ahead = 3 * Math.cos(lookAround);
       focus.set(car.x + fx * ahead, car.y + car.spec.camHeight * 0.27, car.z + fz * ahead);
       fovT = Math.min(baseFov + 18, baseFov + speed * 0.5);
@@ -550,6 +566,8 @@ export function createGame(
       window.removeEventListener("keyup", ku);
       window.removeEventListener("blur", blur);
       canvas.removeEventListener("pointerdown", pd);
+      canvas.removeEventListener("contextmenu", noMenu);
+      if (locked()) document.exitPointerLock();
       window.removeEventListener("pointermove", pm);
       window.removeEventListener("pointerup", pu);
       sound.dispose();
