@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { connection } from "next/server";
 import { Grenze, Spectral } from "next/font/google";
 import HideoutApp from "./_components/HideoutApp";
 import { getGhosts, type Ghost } from "./_lib/ghosts";
@@ -17,9 +16,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#050708" };
 
+// weather caches for 10 minutes; every guestbook action revalidates /hideout
+export const revalidate = 600;
+
 export default async function HideoutPage() {
-  // guestbook entries change outside this route, so read them per request like the homepage does
-  await connection();
   const [weather, ghosts, demos] = await Promise.all([
     getWeather(),
     getGhosts().catch((): Ghost[] => []),

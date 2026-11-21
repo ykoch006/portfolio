@@ -50,7 +50,7 @@ export default function RecentSpins() {
             <span className={styles.spinLabel}>
               {album.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={album.imageUrl} alt="" />
+                <img src={album.imageUrl} alt="" loading="lazy" decoding="async" />
               ) : null}
             </span>
           </button>

@@ -51,7 +51,7 @@ export default function Signal() {
         <div className={styles.npArt}>
           {t?.albumImageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={t.albumImageUrl} alt={t.album ?? ""} width={56} height={56} />
+            <img src={t.albumImageUrl} alt={t.album ?? ""} width={56} height={56} loading="lazy" decoding="async" />
           )}
         </div>
         <div className={styles.npText}>

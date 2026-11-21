@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { renameDemoTitleAction } from "@/lib/demo-actions";
+import { Suspense, useEffect, useRef, useState } from "react";
+import DemoRename from "./DemoRename";
+import { formatTime } from "@/lib/format";
 import styles from "@/app/demos/demos.module.css";
 
 const LEVELS = "▁▂▃▄▅▆▇█";
@@ -24,13 +25,6 @@ function getSource(ctx: AudioContext, el: HTMLAudioElement) {
   return source;
 }
 
-function formatTime(seconds: number) {
-  if (!Number.isFinite(seconds)) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
 export default function DemoTrack({
   n,
   file,
@@ -40,8 +34,6 @@ export default function DemoTrack({
   dateAdded,
   isActive,
   onPlay,
-  isModerator,
-  modkey,
 }: {
   n: string;
   file: string;
@@ -51,8 +43,6 @@ export default function DemoTrack({
   dateAdded: string;
   isActive: boolean;
   onPlay: () => void;
-  isModerator: boolean;
-  modkey?: string;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -180,20 +170,9 @@ export default function DemoTrack({
           {bars.map((v) => LEVELS[v]).join("")}
         </div>
 
-        {isModerator && (
-          <form action={renameDemoTitleAction} className={styles.renameForm}>
-            <input type="hidden" name="file" value={file} />
-            <input type="hidden" name="modkey" value={modkey} />
-            <input
-              type="text"
-              name="title"
-              defaultValue={title}
-              maxLength={100}
-              className={styles.renameInput}
-            />
-            <button type="submit" className={styles.renameBtn}>save</button>
-          </form>
-        )}
+        <Suspense fallback={null}>
+          <DemoRename file={file} title={title} />
+        </Suspense>
       </div>
 
       <div className={styles.meta}>

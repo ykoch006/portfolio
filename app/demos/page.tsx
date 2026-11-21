@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAllDemos } from "@/lib/demos";
-import { pad } from "@/lib/posts";
+import { pad } from "@/lib/format";
 import DemoList from "@/components/DemoList";
 import styles from "./demos.module.css";
 
@@ -9,33 +9,24 @@ export const metadata = {
   description: "song demos.",
 };
 
-export default async function DemosIndex({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const demos = await getAllDemos();
-  const total = demos.length;
+// titles can also change through the rename action, which revalidates /demos itself
+export const revalidate = 3600;
 
-  const params = await searchParams;
-  const modkeyParam = params.modkey;
-  const modkey = Array.isArray(modkeyParam) ? modkeyParam[0] : modkeyParam;
-  const isModerator = Boolean(
-    modkey && process.env.GUESTBOOK_ADMIN_KEY && modkey === process.env.GUESTBOOK_ADMIN_KEY
-  );
+export default async function DemosIndex() {
+  const demos = await getAllDemos();
 
   return (
     <div className={styles.root}>
       <div className={styles.page}>
         <div className={styles.head}>
           <Link href="/" className={styles.home}>index</Link>
-          <h1>demos / {pad(total)} tracks</h1>
+          <h1>demos / {pad(demos.length)} tracks</h1>
         </div>
 
         {demos.length === 0 ? (
           <p className={styles.empty}>nothing here yet.</p>
         ) : (
-          <DemoList demos={demos} isModerator={isModerator} modkey={modkey} />
+          <DemoList demos={demos} />
         )}
       </div>
     </div>

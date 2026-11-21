@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import type { Weather } from "@/lib/weather";
 
 const fmt = new Intl.DateTimeFormat("en-GB", {
@@ -18,18 +18,21 @@ function formatLondon(ms: number) {
   return `${p.year}.${p.month}.${p.day} · ${p.hour}:${p.minute} london`;
 }
 
-export default function Vitals({ weather, initial }: { weather: Weather | null; initial: number }) {
-  const [now, setNow] = useState(initial);
+function subscribe(cb: () => void) {
+  const t = setInterval(cb, 15000);
+  return () => clearInterval(t);
+}
 
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 15000);
-    return () => clearInterval(t);
-  }, []);
+// minute resolution keeps the snapshot stable between ticks
+const minuteNow = () => Math.floor(Date.now() / 60000) * 60000;
+
+export default function Vitals({ weather }: { weather: Weather | null }) {
+  const now = useSyncExternalStore(subscribe, minuteNow, () => null);
 
   return (
-    <span suppressHydrationWarning>
-      {formatLondon(now)}
-      {weather && ` · ${weather.tempC}° ${weather.condition}`}
+    <span>
+      {now !== null && formatLondon(now)}
+      {weather && `${now !== null ? " · " : ""}${weather.tempC}° ${weather.condition}`}
     </span>
   );
 }

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { barSpan, createVisualizer, MAX_BARS, type Visualizer } from "./visualizer";
+import { formatTime } from "@/lib/format";
 import styles from "../release.module.css";
 
 const MOTION_KEY = "release-motion";
@@ -62,13 +63,6 @@ function bandEdges(count: number, binHz: number, bins: number) {
     edges[i] = Math.min(bins - 1, Math.round(hz / binHz));
   }
   return edges;
-}
-
-function formatTime(seconds: number) {
-  if (!Number.isFinite(seconds)) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 export default function ReleasePlayer({

@@ -25,7 +25,6 @@ export default function FeaturedMix() {
               src={`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`}
               alt=""
               fill
-              fetchPriority="high"
               sizes="(max-width: 900px) 100vw, 620px"
             />
             <span className={styles.mixPlayIcon} aria-hidden="true">play</span>

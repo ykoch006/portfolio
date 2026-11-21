@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { getGuestbookEntries } from "@/lib/guestbook";
-import { submitGuestbookEntry, deleteGuestbookEntryAction } from "@/lib/guestbook-actions";
+import { submitGuestbookEntry } from "@/lib/guestbook-actions";
 import { redis } from "@/lib/redis";
+import GuestbookDelete from "./GuestbookDelete";
 import styles from "@/app/page.module.css";
 
 function formatDate(ts: number) {
@@ -9,11 +11,8 @@ function formatDate(ts: number) {
   return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`;
 }
 
-export default async function Guestbook({ modkey }: { modkey?: string }) {
+export default async function Guestbook() {
   const entries = await getGuestbookEntries();
-  const isModerator = Boolean(
-    modkey && process.env.GUESTBOOK_ADMIN_KEY && modkey === process.env.GUESTBOOK_ADMIN_KEY
-  );
 
   return (
     <section id="guestbook" className={styles.guestbook} aria-labelledby="gb-h">
@@ -54,13 +53,9 @@ export default async function Guestbook({ modkey }: { modkey?: string }) {
               <span className={styles.guestbookDate}>{formatDate(entry.createdAt)}</span>
             </div>
             <p className={styles.guestbookComment}>{entry.comment}</p>
-            {isModerator && (
-              <form action={deleteGuestbookEntryAction} className={styles.guestbookDelete}>
-                <input type="hidden" name="id" value={entry.id} />
-                <input type="hidden" name="modkey" value={modkey} />
-                <button type="submit">delete</button>
-              </form>
-            )}
+            <Suspense fallback={null}>
+              <GuestbookDelete id={entry.id} className={styles.guestbookDelete} />
+            </Suspense>
           </li>
         ))}
       </ol>

@@ -34,6 +34,7 @@ export async function submitGuestbookEntry(formData: FormData) {
 
   await addGuestbookEntry(name, comment);
   revalidatePath("/");
+  revalidatePath("/hideout");
 }
 
 export async function deleteGuestbookEntryAction(formData: FormData) {
@@ -47,4 +48,5 @@ export async function deleteGuestbookEntryAction(formData: FormData) {
 
   await deleteGuestbookEntry(id);
   revalidatePath("/");
+  revalidatePath("/hideout");
 }

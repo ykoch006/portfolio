@@ -2,8 +2,11 @@ export const MAX_BARS = 128;
 
 export type Frame = { bars: Uint8Array; count: number };
 
+let narrow: MediaQueryList | null = null;
+
 export function barSpan(cssWidth: number) {
-  const inset = window.matchMedia("(max-width: 699px)").matches ? 16 : 20;
+  narrow ??= window.matchMedia("(max-width: 699px)");
+  const inset = narrow.matches ? 16 : 20;
   return { left: cssWidth * 0.5, right: inset, inset };
 }
 
@@ -86,7 +89,7 @@ function makeTexture(gl: WebGLRenderingContext, unit: number, filter: number) {
 }
 
 export function createVisualizer(canvas: HTMLCanvasElement, imageUrl: string) {
-  const gl = canvas.getContext("webgl", { antialias: false, preserveDrawingBuffer: true });
+  const gl = canvas.getContext("webgl", { antialias: false });
   if (!gl) return null;
 
   const program = gl.createProgram()!;

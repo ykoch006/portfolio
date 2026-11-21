@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getAllPosts, pad, fullDate } from "@/lib/posts";
+import { getAllPosts, fullDate } from "@/lib/posts";
+import { pad } from "@/lib/format";
 import styles from "./blog.module.css";
 
 export const metadata = {

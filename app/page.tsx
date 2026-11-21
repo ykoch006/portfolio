@@ -9,25 +9,19 @@ import GlitchText from "@/components/GlitchText";
 import Guestbook from "@/components/Guestbook";
 import AsciiSpinner from "@/components/AsciiSpinner";
 import Mascot from "@/components/Mascot";
+import Session from "@/components/Session";
 import ThemeToggle from "@/components/ThemeToggle";
 import { countDemos } from "@/lib/demos";
 import { getWeather } from "@/lib/weather";
 import { contact, release, youtube } from "@/lib/site";
 import styles from "./page.module.css";
 
-function stamp() {
-  return { session: Math.random().toString(16).slice(2, 6), now: Date.now() };
-}
+// weather caches for 10 minutes; guestbook actions revalidate this page on change
+export const revalidate = 600;
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const [params, weather] = await Promise.all([searchParams, getWeather()]);
-  const modkey = Array.isArray(params.modkey) ? params.modkey[0] : params.modkey;
+export default async function HomePage() {
+  const weather = await getWeather();
   const demos = countDemos();
-  const { session, now } = stamp();
 
   return (
     <>
@@ -38,7 +32,7 @@ export default async function HomePage({
           src={release.banner}
           alt="a snowy road at dusk"
           fill
-          priority
+          preload
           unoptimized
           className={styles.heroImg}
         />
@@ -54,9 +48,9 @@ export default async function HomePage({
         <div className={styles.top}>
           <div className={styles.status}>
             <span>
-              <AsciiSpinner className={styles.spinner} /> session {session}
+              <AsciiSpinner className={styles.spinner} /> <Session />
             </span>
-            <Vitals weather={weather} initial={now} />
+            <Vitals weather={weather} />
             <ThemeToggle className={styles.themeToggle} />
           </div>
 
@@ -71,7 +65,7 @@ export default async function HomePage({
         </div>
 
         <main id="main" className={styles.grid}>
-          <section id="music" className={styles.music} aria-label="music">
+          <section id="music" aria-label="music">
             <div className={styles.head}>
               <a className={styles.cta} href={youtube.channelUrl} target="_blank" rel="noreferrer">
                 more on youtube
@@ -88,7 +82,7 @@ export default async function HomePage({
             </div>
           </section>
 
-          <Guestbook modkey={modkey} />
+          <Guestbook />
         </main>
 
         <footer id="contact" className={styles.foot}>
